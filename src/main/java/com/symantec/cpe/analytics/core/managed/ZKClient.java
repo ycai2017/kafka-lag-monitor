@@ -1,21 +1,26 @@
 package com.symantec.cpe.analytics.core.managed;
 
-import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
-import com.symantec.cpe.analytics.core.kafka.KafkaConsumerGroupMetadata;
-import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
-import io.dropwizard.lifecycle.Managed;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
+import com.symantec.cpe.analytics.core.kafka.KafkaConsumerGroupMetadata;
+import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
+
+import io.dropwizard.lifecycle.Managed;
 
 public class ZKClient implements Managed {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ZKClient.class);
     private KafkaMonitorConfiguration kafkaConfiguration;
     private RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
     private CuratorFramework client;

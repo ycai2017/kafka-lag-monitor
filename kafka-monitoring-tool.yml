@@ -1,4 +1,4 @@
-zookeeperUrls: zookeeper01-spaas-qa.ash2.symcpe.net:2181,zookeeper02-spaas-qa.ash2.symcpe.net:2181,zookeeper03-spaas-qa.ash2.symcpe.net:2181
+zookeeperUrls: localhost:2181
 statsDHost: localhost
 statsDPort: 8125
 statsDPrefix: kafka-monitoring

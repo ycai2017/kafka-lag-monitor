@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.symantec.cpe</groupId>
+    <groupId>com.srotya.tools</groupId>
     <artifactId>kafka-monitoring-tool</artifactId>
     <version>0.0.1</version>
     <name>kafka-monitoring-tool</name>
@@ -17,7 +17,7 @@
         <hadoop.version>2.2.0.2.0.10.0-1</hadoop.version>
         <oozie.version>4.0.0.2.1.4.0-632</oozie.version>
         <yarn.version>2.4.0</yarn.version>
-        <kafka.version>0.8.1</kafka.version>
+        <kafka.version>0.8.2.2</kafka.version>
         <curator-framework.version>2.7.0</curator-framework.version>
         <statsd.client.version>3.0.1</statsd.client.version>
         <commons.lang3.version>3.3.2</commons.lang3.version>
