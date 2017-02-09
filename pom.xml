@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.srotya.tools</groupId>
     <artifactId>kafka-monitoring-tool</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
     <name>kafka-monitoring-tool</name>
 
     <properties>
