@@ -30,6 +30,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
 import com.symantec.cpe.analytics.core.kafka.KafkaConsumerGroupMetadata;
+import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
 
 import io.dropwizard.lifecycle.Managed;
 
@@ -54,6 +55,7 @@ public class ZKClient implements Managed {
 	@Override
 	public void stop() throws Exception {
 		client.close();
+		KafkaConsumerOffsetUtil.closeConnection();
 	}
 
 	public List<KafkaConsumerGroupMetadata> getActiveRegularConsumersAndTopics() throws Exception {
@@ -83,8 +85,8 @@ public class ZKClient implements Managed {
 		return kafkaConsumerGroupMetadataList;
 	}
 
-	public List<String> getActiveSpoutConsumerGroups(String zkRoot) throws Exception {
-		List<String> rootChildren = (client.getChildren().forPath(zkRoot + "/"));
+	public List<String> getActiveSpoutConsumerGroups() throws Exception {
+		List<String> rootChildren = (client.getChildren().forPath(kafkaConfiguration.getCommonZkRoot() + "/"));
 		List<String> activeSpoutConsumerGroupList = new ArrayList<String>();
 		for (String rootChild : rootChildren) {
 			if (!nonSpoutConsumerNodes.contains(rootChild)) {
