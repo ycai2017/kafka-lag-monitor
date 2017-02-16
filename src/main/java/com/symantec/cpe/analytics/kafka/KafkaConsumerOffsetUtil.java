@@ -108,26 +108,30 @@ public class KafkaConsumerOffsetUtil {
 			} catch (Exception e) {
 				LOG.error("Error while listing partitions for the consumer group: " + consumerGroup);
 			}
-			for (String partition : partitions) {
-				byte[] byteData = zkClient
-						.getData(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup + "/" + partition);
-				String data = "";
-				if (byteData != null) {
-					data = new String(byteData);
+			try {
+				for (String partition : partitions) {
+					byte[] byteData = zkClient
+							.getData(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup + "/" + partition);
+					String data = "";
+					if (byteData != null) {
+						data = new String(byteData);
+					}
+					if (!data.trim().isEmpty()) {
+						KafkaSpoutMetadata kafkaSpoutMetadata = new ObjectMapper().readValue(data,
+								KafkaSpoutMetadata.class);
+						SimpleConsumer consumer = getConsumer(kafkaSpoutMetadata.getBroker().getHost(),
+								kafkaSpoutMetadata.getBroker().getPort(), clientName);
+						long realOffset = getLastOffset(consumer, kafkaSpoutMetadata.getTopic(),
+								kafkaSpoutMetadata.getPartition(), -1, clientName);
+						long lag = realOffset - kafkaSpoutMetadata.getOffset();
+						KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor(consumerGroup,
+								kafkaSpoutMetadata.getTopic(), kafkaSpoutMetadata.getPartition(), realOffset,
+								kafkaSpoutMetadata.getOffset(), lag);
+						kafkaOffsetMonitors.add(kafkaOffsetMonitor);
+					}
 				}
-				if (!data.trim().isEmpty()) {
-					KafkaSpoutMetadata kafkaSpoutMetadata = new ObjectMapper().readValue(data,
-							KafkaSpoutMetadata.class);
-					SimpleConsumer consumer = getConsumer(kafkaSpoutMetadata.getBroker().getHost(),
-							kafkaSpoutMetadata.getBroker().getPort(), clientName);
-					long realOffset = getLastOffset(consumer, kafkaSpoutMetadata.getTopic(),
-							kafkaSpoutMetadata.getPartition(), -1, clientName);
-					long lag = realOffset - kafkaSpoutMetadata.getOffset();
-					KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor(consumerGroup,
-							kafkaSpoutMetadata.getTopic(), kafkaSpoutMetadata.getPartition(), realOffset,
-							kafkaSpoutMetadata.getOffset(), lag);
-					kafkaOffsetMonitors.add(kafkaOffsetMonitor);
-				}
+			} catch (Exception e) {
+				LOG.warn("Skipping znode:" + consumerGroup + " as it doesn't seem to be a topology consumer group");
 			}
 		}
 		return kafkaOffsetMonitors;
