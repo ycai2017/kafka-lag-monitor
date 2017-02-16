@@ -43,12 +43,14 @@ public class KafkaResource {
 	private KafkaMonitorConfiguration kafkaConfiguration;
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaResource.class);
 	private ZKClient zkClient;
+	private Subject subject;
 
 	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
+		this.subject = subject;
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-				zkClient);
+				zkClient, subject);
 		kafkaConsumerOffsetUtil.setupMonitoring();
 	}
 
@@ -60,7 +62,7 @@ public class KafkaResource {
 		String responseType = MediaType.APPLICATION_JSON;
 		try {
 			KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-					zkClient);
+					zkClient, subject);
 			List<KafkaOffsetMonitor> kafkaOffsetMonitors = kafkaConsumerOffsetUtil.getReferences().get();
 			if (outputType.equals("html")) {
 				responseType = MediaType.TEXT_HTML;

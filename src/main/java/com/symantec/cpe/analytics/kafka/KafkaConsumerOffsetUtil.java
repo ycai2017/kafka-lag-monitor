@@ -15,6 +15,7 @@
  */
 package com.symantec.cpe.analytics.kafka;
 
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.security.auth.Subject;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.lang3.StringUtils;
@@ -58,10 +61,11 @@ public class KafkaConsumerOffsetUtil {
 	private ZKClient zkClient;
 	private static ZkClient iotecZkClient;
 	private AtomicReference<ArrayList<KafkaOffsetMonitor>> references = null;
+	private Subject subject;
 
-	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
+	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
 		if (kafkaConsumerOffsetUtil == null) {
-			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient);
+			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient, subject);
 		}
 		if (iotecZkClient == null) {
 			iotecZkClient = new ZkClient(kafkaConfiguration.getZookeeperUrls(), 10000, 10000,
@@ -70,9 +74,10 @@ public class KafkaConsumerOffsetUtil {
 		return kafkaConsumerOffsetUtil;
 	}
 
-	private KafkaConsumerOffsetUtil(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
+	private KafkaConsumerOffsetUtil(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
+		this.subject = subject;
 		this.references = new AtomicReference<>(new ArrayList<KafkaOffsetMonitor>());
 	}
 
@@ -85,16 +90,23 @@ public class KafkaConsumerOffsetUtil {
 	private class KafkaConsumerOffsetThread implements Runnable {
 		@Override
 		public void run() {
-			try {
-				ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
-				kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
-				kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
-				Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
-				references.set(kafkaOffsetMonitors);
-				LOG.info("Updating new lag information");
-			} catch (Exception e) {
-				LOG.error("Error while collecting kafka consumer offset metrics", e);
-			}
+			Subject.doAs(subject, new PrivilegedAction<Void>() {
+
+				@Override
+				public Void run() {
+					try {
+						ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
+						kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
+						kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
+						Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
+						references.set(kafkaOffsetMonitors);
+						LOG.info("Updating new lag information");
+					} catch (Exception e) {
+						LOG.error("Error while collecting kafka consumer offset metrics", e);
+					}
+					return null;
+				}
+			});
 		}
 	}
 
@@ -102,6 +114,7 @@ public class KafkaConsumerOffsetUtil {
 		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 		List<String> activeSpoutConsumerGroupList = zkClient.getActiveSpoutConsumerGroups();
 		List<String> partitions = new ArrayList<String>();
+		
 		for (String consumerGroup : activeSpoutConsumerGroupList) {
 			try {
 				partitions = zkClient.getChildren(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup);
