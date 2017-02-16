@@ -17,6 +17,7 @@ package com.symantec.cpe.analytics.resources.kafka;
 
 import java.util.List;
 
+import javax.security.auth.Subject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -43,7 +44,7 @@ public class KafkaResource {
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaResource.class);
 	private ZKClient zkClient;
 
-	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
+	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,

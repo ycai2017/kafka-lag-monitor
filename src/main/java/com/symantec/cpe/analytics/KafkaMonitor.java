@@ -15,6 +15,12 @@
  */
 package com.symantec.cpe.analytics;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+
 import com.symantec.cpe.analytics.core.managed.ZKClient;
 import com.symantec.cpe.analytics.resources.kafka.KafkaResource;
 
@@ -24,26 +30,44 @@ import io.dropwizard.setup.Environment;
 
 public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 
-    @Override
-    public void initialize(Bootstrap<KafkaMonitorConfiguration> bootstrap) {
-    }
+	private Subject subject = null;
 
-    @Override
-    public void run(KafkaMonitorConfiguration configuration, Environment environment)
-            throws Exception {
-        ZKClient zkClient = new ZKClient(configuration);
-        environment.lifecycle().manage(zkClient);
-        KafkaResource kafkaResource = new KafkaResource(configuration, zkClient);
-        environment.jersey().register(kafkaResource);
-    }
+	@Override
+	public void initialize(Bootstrap<KafkaMonitorConfiguration> bootstrap) {
+	}
 
-    @Override
-    public String getName() {
-        return "kafka-monitor";
-    }
+	@Override
+	public void run(final KafkaMonitorConfiguration configuration, final Environment environment) throws Exception {
+		if (configuration.isKerberos()) {
+			System.setProperty("java.security.auth.login.config", configuration.getJaasConf());
+			System.setProperty("java.security.krb5.conf", "/etc/krb5.conf");
+			System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
+			LoginContext lc = new LoginContext("Client");
+			lc.login();
+			subject = lc.getSubject();
+		} else {
+			subject = Subject.getSubject(AccessController.getContext());
+		}
+		Subject.doAs(subject, new PrivilegedAction<Void>() {
 
-    public static void main(String[] args) throws Exception {
-        new KafkaMonitor().run(args);
-    }
+			@Override
+			public Void run() {
+				ZKClient zkClient = new ZKClient(configuration);
+				environment.lifecycle().manage(zkClient);
+				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient, subject);
+				environment.jersey().register(kafkaResource);
+				return null;
+			}
+		});
+	}
+
+	@Override
+	public String getName() {
+		return "kafka-monitor";
+	}
+
+	public static void main(String[] args) throws Exception {
+		new KafkaMonitor().run(args);
+	}
 
 }

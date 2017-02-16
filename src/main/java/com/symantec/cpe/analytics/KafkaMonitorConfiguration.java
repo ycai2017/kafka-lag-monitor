@@ -21,69 +21,156 @@ import javax.validation.Valid;
 
 public class KafkaMonitorConfiguration extends Configuration {
 
-    @Valid
-    private String zookeeperUrls = "localhost:2181";
+	@Valid
+	private String jaasConf = "./jaas.conf";
 
-    @Valid
-    private int refreshSeconds = 10;
+	@Valid
+	private boolean kerberos = false;
 
-    @Valid
-    private String statsDHost = "localhost";
+	@Valid
+	private String zookeeperUrls = "localhost:2181";
 
-    @Valid
-    private int statsDPort = 8125;
+	@Valid
+	private int refreshSeconds = 10;
 
-    @Valid
-    private String statsDPrefix = "kafka-monitoring";
+	@Valid
+	private String statsDHost = "localhost";
 
-    @Valid
-    private boolean pushToStatsD = false;
+	@Valid
+	private int statsDPort = 8125;
 
-    public String getZookeeperUrls() {
-        return zookeeperUrls;
-    }
+	@Valid
+	private String statsDPrefix = "kafka-monitoring";
 
-    public void setZookeeperUrls(String zookeeperUrls) {
-        this.zookeeperUrls = zookeeperUrls;
-    }
+	@Valid
+	private boolean pushToStatsD = false;
 
-    public int getRefreshSeconds() {
-        return refreshSeconds;
-    }
+	@Valid
+	private String commonZkRoot = "";
+	
+	@Valid
+	private String kafkaBroker = "localhost";
+	
+	@Valid
+	private int kafkaPort = 6667;
 
-    public void setRefreshSeconds(int refreshSeconds) {
-        this.refreshSeconds = refreshSeconds;
-    }
+	public String getZookeeperUrls() {
+		return zookeeperUrls;
+	}
 
-    public String getStatsDHost() {
-        return statsDHost;
-    }
+	public void setZookeeperUrls(String zookeeperUrls) {
+		this.zookeeperUrls = zookeeperUrls;
+	}
 
-    public void setStatsDHost(String statsDHost) {
-        this.statsDHost = statsDHost;
-    }
+	public int getRefreshSeconds() {
+		return refreshSeconds;
+	}
 
-    public int getStatsDPort() {
-        return statsDPort;
-    }
+	public void setRefreshSeconds(int refreshSeconds) {
+		this.refreshSeconds = refreshSeconds;
+	}
 
-    public void setStatsDPort(int statsDPort) {
-        this.statsDPort = statsDPort;
-    }
+	public String getStatsDHost() {
+		return statsDHost;
+	}
 
-    public String getStatsDPrefix() {
-        return statsDPrefix;
-    }
+	public void setStatsDHost(String statsDHost) {
+		this.statsDHost = statsDHost;
+	}
 
-    public void setStatsDPrefix(String statsDPrefix) {
-        this.statsDPrefix = statsDPrefix;
-    }
+	public int getStatsDPort() {
+		return statsDPort;
+	}
 
-    public boolean isPushToStatsD() {
-        return pushToStatsD;
-    }
+	public void setStatsDPort(int statsDPort) {
+		this.statsDPort = statsDPort;
+	}
 
-    public void setPushToStatsD(boolean pushToStatsD) {
-        this.pushToStatsD = pushToStatsD;
-    }
+	public String getStatsDPrefix() {
+		return statsDPrefix;
+	}
+
+	public void setStatsDPrefix(String statsDPrefix) {
+		this.statsDPrefix = statsDPrefix;
+	}
+
+	public boolean isPushToStatsD() {
+		return pushToStatsD;
+	}
+
+	public void setPushToStatsD(boolean pushToStatsD) {
+		this.pushToStatsD = pushToStatsD;
+	}
+
+	/**
+	 * @return the kerberos
+	 */
+	public boolean isKerberos() {
+		return kerberos;
+	}
+
+	/**
+	 * @param kerberos
+	 *            the kerberos to set
+	 */
+	public void setKerberos(boolean kerberos) {
+		this.kerberos = kerberos;
+	}
+
+	/**
+	 * @return the jaasConf
+	 */
+	public String getJaasConf() {
+		return jaasConf;
+	}
+
+	/**
+	 * @param jaasConf
+	 *            the jaasConf to set
+	 */
+	public void setJaasConf(String jaasConf) {
+		this.jaasConf = jaasConf;
+	}
+
+	/**
+	 * @return the commonZkRoot
+	 */
+	public String getCommonZkRoot() {
+		return commonZkRoot;
+	}
+
+	/**
+	 * @param commonZkRoot the commonZkRoot to set
+	 */
+	public void setCommonZkRoot(String commonZkRoot) {
+		this.commonZkRoot = commonZkRoot;
+	}
+
+	/**
+	 * @return the kafkaBroker
+	 */
+	public String getKafkaBroker() {
+		return kafkaBroker;
+	}
+
+	/**
+	 * @param kafkaBroker the kafkaBroker to set
+	 */
+	public void setKafkaBroker(String kafkaBroker) {
+		this.kafkaBroker = kafkaBroker;
+	}
+
+	/**
+	 * @return the kafkaPort
+	 */
+	public int getKafkaPort() {
+		return kafkaPort;
+	}
+
+	/**
+	 * @param kafkaPort the kafkaPort to set
+	 */
+	public void setKafkaPort(int kafkaPort) {
+		this.kafkaPort = kafkaPort;
+	}
 }
