@@ -63,7 +63,8 @@ public class KafkaConsumerOffsetUtil {
 	private AtomicReference<ArrayList<KafkaOffsetMonitor>> references = null;
 	private Subject subject;
 
-	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
+	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient,
+			Subject subject) {
 		if (kafkaConsumerOffsetUtil == null) {
 			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient, subject);
 		}
@@ -95,7 +96,7 @@ public class KafkaConsumerOffsetUtil {
 				@Override
 				public Void run() {
 					try {
-						
+
 						ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 						kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
 						kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
@@ -115,7 +116,7 @@ public class KafkaConsumerOffsetUtil {
 		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 		List<String> activeSpoutConsumerGroupList = zkClient.getActiveSpoutConsumerGroups();
 		List<String> partitions = new ArrayList<String>();
-		
+
 		for (String consumerGroup : activeSpoutConsumerGroupList) {
 			try {
 				partitions = zkClient.getChildren(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup);
@@ -236,7 +237,8 @@ public class KafkaConsumerOffsetUtil {
 	public SimpleConsumer getConsumer(String host, int port, String clientName) {
 		SimpleConsumer consumer = consumerMap.get(host);
 		if (consumer == null) {
-			consumer = new SimpleConsumer(host, port, 100000, 64 * 1024, clientName, "SASL_PLAINTEXT");
+			consumer = new SimpleConsumer(host, port, 100000, 64 * 1024, clientName,
+					System.getProperty("security.protocol"));
 			LOG.info("Created a new Kafka Consumer for host: " + host);
 			consumerMap.put(host, consumer);
 		}
