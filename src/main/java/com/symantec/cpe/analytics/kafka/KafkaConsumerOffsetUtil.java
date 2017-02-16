@@ -95,6 +95,7 @@ public class KafkaConsumerOffsetUtil {
 				@Override
 				public Void run() {
 					try {
+						
 						ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 						kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
 						kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
@@ -235,7 +236,7 @@ public class KafkaConsumerOffsetUtil {
 	public SimpleConsumer getConsumer(String host, int port, String clientName) {
 		SimpleConsumer consumer = consumerMap.get(host);
 		if (consumer == null) {
-			consumer = new SimpleConsumer(host, port, 100000, 64 * 1024, clientName);
+			consumer = new SimpleConsumer(host, port, 100000, 64 * 1024, clientName, "SASL_PLAINTEXT");
 			LOG.info("Created a new Kafka Consumer for host: " + host);
 			consumerMap.put(host, consumer);
 		}
