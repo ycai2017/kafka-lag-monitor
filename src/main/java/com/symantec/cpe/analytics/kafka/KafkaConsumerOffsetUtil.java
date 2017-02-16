@@ -256,29 +256,6 @@ public class KafkaConsumerOffsetUtil {
 		return sb.toString();
 	}
 
-	// public void sendToStatsD(List<KafkaOffsetMonitor> kafkaOffsetMonitors,
-	// String prefix, String statsDServer, int statsDPort) throws Exception {
-	// if (statsd == null) {
-	// statsd = new NonBlockingStatsDClient(prefix, statsDServer, statsDPort);
-	// }
-	// for (KafkaOffsetMonitor kafkaOffsetMonitor : kafkaOffsetMonitors) {
-	// String statsDSeriesName = kafkaOffsetMonitor.getConsumerGroupName() + "."
-	// + kafkaOffsetMonitor.getTopic() + "." +
-	// kafkaOffsetMonitor.getPartition();
-	// LOG.info(prefix + "." + statsDSeriesName + ".topic_offset: " +
-	// kafkaOffsetMonitor.getLogSize());
-	// statsd.gauge(statsDSeriesName + ".topic_offset",
-	// kafkaOffsetMonitor.getLogSize());
-	// LOG.info(prefix + "." + statsDSeriesName + ".consumer_offset: " +
-	// kafkaOffsetMonitor.getConsumerOffset());
-	// statsd.gauge(statsDSeriesName + ".consumer_offset",
-	// kafkaOffsetMonitor.getConsumerOffset());
-	// LOG.info(prefix + "." + prefix + "." + statsDSeriesName + ".lag: " +
-	// kafkaOffsetMonitor.getLag());
-	// statsd.gauge(statsDSeriesName + ".lag", kafkaOffsetMonitor.getLag());
-	// }
-	// }
-
 	// fetch all available brokers from the zookeeper
 
 	public AtomicReference<ArrayList<KafkaOffsetMonitor>> getReferences() {
