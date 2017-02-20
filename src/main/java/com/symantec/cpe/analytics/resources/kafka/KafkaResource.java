@@ -17,7 +17,6 @@ package com.symantec.cpe.analytics.resources.kafka;
 
 import java.util.List;
 
-import javax.security.auth.Subject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -43,14 +42,12 @@ public class KafkaResource {
 	private KafkaMonitorConfiguration kafkaConfiguration;
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaResource.class);
 	private ZKClient zkClient;
-	private Subject subject;
 
-	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, Subject subject) {
+	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
-		this.subject = subject;
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-				zkClient, subject);
+				zkClient);
 		kafkaConsumerOffsetUtil.setupMonitoring();
 	}
 
@@ -62,7 +59,7 @@ public class KafkaResource {
 		String responseType = MediaType.APPLICATION_JSON;
 		try {
 			KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-					zkClient, subject);
+					zkClient);
 			List<KafkaOffsetMonitor> kafkaOffsetMonitors = kafkaConsumerOffsetUtil.getReferences().get();
 			if (outputType.equals("html")) {
 				responseType = MediaType.TEXT_HTML;

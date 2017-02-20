@@ -57,7 +57,7 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 			public Void run() {
 				ZKClient zkClient = new ZKClient(configuration);
 				environment.lifecycle().manage(zkClient);
-				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient, subject);
+				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient);
 				environment.jersey().register(kafkaResource);
 				return null;
 			}
