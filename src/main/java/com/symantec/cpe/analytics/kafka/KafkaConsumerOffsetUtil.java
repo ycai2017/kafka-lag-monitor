@@ -15,6 +15,7 @@
  */
 package com.symantec.cpe.analytics.kafka;
 
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,9 +91,14 @@ public class KafkaConsumerOffsetUtil {
 		@Override
 		public void run() {
 			try {
-				LoginContext lc = new LoginContext("Client");
-				lc.login();
-				Subject subject = lc.getSubject();
+				Subject subject = null;
+				if (kafkaConfiguration.isKerberos()) {
+					LoginContext lc = new LoginContext("Client");
+					lc.login();
+					subject = lc.getSubject();
+				}else {
+					Subject.getSubject(AccessController.getContext());
+				}
 				Subject.doAs(subject, new PrivilegedAction<Void>() {
 
 					@Override

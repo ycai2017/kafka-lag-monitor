@@ -52,7 +52,7 @@ public class KafkaMonitorConfiguration extends Configuration {
 	private String kafkaBroker = "localhost";
 	
 	@Valid
-	private int kafkaPort = 6667;
+	private int kafkaPort = 9092;
 
 	public String getZookeeperUrls() {
 		return zookeeperUrls;
