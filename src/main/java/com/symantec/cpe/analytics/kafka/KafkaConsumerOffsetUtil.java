@@ -123,14 +123,14 @@ public class KafkaConsumerOffsetUtil {
 
 		for (String consumerGroup : activeSpoutConsumerGroupList) {
 			try {
-				partitions = zkClient.getChildren(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup);
+				partitions = zkClient.getChildren(kafkaConfiguration.getCommonZkRoot() + consumerGroup);
 			} catch (Exception e) {
 				LOG.error("Error while listing partitions for the consumer group: " + consumerGroup);
 			}
 			try {
 				for (String partition : partitions) {
 					byte[] byteData = zkClient
-							.getData(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup + "/" + partition);
+							.getData(kafkaConfiguration.getCommonZkRoot() + consumerGroup + "/" + partition);
 					String data = "";
 					if (byteData != null) {
 						data = new String(byteData);
