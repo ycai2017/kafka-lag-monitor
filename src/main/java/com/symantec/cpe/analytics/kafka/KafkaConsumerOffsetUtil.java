@@ -76,6 +76,7 @@ public class KafkaConsumerOffsetUtil {
 
 	private KafkaConsumerOffsetUtil(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
 		this.kafkaConfiguration = kafkaConfiguration;
+		this.zkClient = zkClient;
 		this.references = new AtomicReference<>(new ArrayList<KafkaOffsetMonitor>());
 	}
 
