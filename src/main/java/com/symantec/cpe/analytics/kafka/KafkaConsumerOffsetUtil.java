@@ -100,7 +100,7 @@ public class KafkaConsumerOffsetUtil {
 						try {
 							ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 							kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
-							kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
+//							kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
 							Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
 							references.set(kafkaOffsetMonitors);
 							LOG.info("Updating new lag information");
