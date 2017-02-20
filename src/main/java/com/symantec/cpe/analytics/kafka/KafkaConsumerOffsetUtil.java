@@ -82,7 +82,7 @@ public class KafkaConsumerOffsetUtil {
 
 	public void setupMonitoring() {
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-		executorService.scheduleAtFixedRate(new KafkaConsumerOffsetThread(), 10, kafkaConfiguration.getRefreshSeconds(),
+		executorService.scheduleAtFixedRate(new KafkaConsumerOffsetThread(), 2, kafkaConfiguration.getRefreshSeconds(),
 				TimeUnit.SECONDS);
 	}
 
@@ -100,7 +100,7 @@ public class KafkaConsumerOffsetUtil {
 						try {
 							ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 							kafkaOffsetMonitors.addAll(getSpoutKafkaOffsetMonitors());
-//							kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
+							kafkaOffsetMonitors.addAll(getRegularKafkaOffsetMonitors());
 							Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
 							references.set(kafkaOffsetMonitors);
 							LOG.info("Updating new lag information");
