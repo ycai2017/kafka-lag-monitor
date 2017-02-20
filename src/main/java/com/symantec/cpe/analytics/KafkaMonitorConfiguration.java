@@ -46,7 +46,7 @@ public class KafkaMonitorConfiguration extends Configuration {
 	private boolean pushToStatsD = false;
 
 	@Valid
-	private String commonZkRoot = "/";
+	private String commonZkRoot = "";
 	
 	@Valid
 	private String kafkaBroker = "localhost";
