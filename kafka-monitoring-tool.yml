@@ -1,9 +1,10 @@
-zookeeperUrls: localhost:2181
-statsDHost: localhost
-statsDPort: 8125
-statsDPrefix: kafka-monitoring
+zookeeperUrls: xxx.xxx.com
 refreshSeconds: 60
-pushToStatsD: false
+jaasConf: /root/jaas.conf
+kerberos: false
+kafkaBroker: xxxx.xxx.com
+kafkaPort: 6667
+commonZkRoot: /
 
 server:
   applicationConnectors:

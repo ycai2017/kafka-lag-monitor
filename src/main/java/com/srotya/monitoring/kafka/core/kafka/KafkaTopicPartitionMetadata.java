@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics.core.kafka;
+package com.srotya.monitoring.kafka.core.kafka;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.symantec.cpe.analytics.core.kafka.Broker;
+import com.srotya.monitoring.kafka.core.kafka.Broker;
 
 import java.util.List;
 

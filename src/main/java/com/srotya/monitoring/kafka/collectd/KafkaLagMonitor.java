@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics.collectd;
+package com.srotya.monitoring.kafka.collectd;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -35,11 +35,11 @@ import org.collectd.api.OConfigItem;
 import org.collectd.api.PluginData;
 import org.collectd.api.ValueList;
 
-import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
-import com.symantec.cpe.analytics.core.kafka.KafkaOffsetMonitor;
-import com.symantec.cpe.analytics.core.managed.ZKClient;
-import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
-import com.symantec.cpe.analytics.kafka.KafkaOffsetMonitorComparator;
+import com.srotya.monitoring.kafka.KafkaMonitorConfiguration;
+import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
+import com.srotya.monitoring.kafka.core.managed.ZKClient;
+import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
+import com.srotya.monitoring.kafka.util.KafkaOffsetMonitorComparator;
 
 /**
  * @author ambud

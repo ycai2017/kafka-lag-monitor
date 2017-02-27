@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics;
+package com.srotya.monitoring.kafka;
 
 import io.dropwizard.Configuration;
 

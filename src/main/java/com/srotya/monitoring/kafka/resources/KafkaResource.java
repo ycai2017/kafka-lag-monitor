@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics.resources.kafka;
+package com.srotya.monitoring.kafka.resources;
 
 import java.util.List;
 
@@ -30,11 +30,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
-import com.symantec.cpe.analytics.core.ResponseMessage;
-import com.symantec.cpe.analytics.core.kafka.KafkaOffsetMonitor;
-import com.symantec.cpe.analytics.core.managed.ZKClient;
-import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
+import com.srotya.monitoring.kafka.KafkaMonitorConfiguration;
+import com.srotya.monitoring.kafka.core.ResponseMessage;
+import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
+import com.srotya.monitoring.kafka.core.managed.ZKClient;
+import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
 
 @Path("/kafka")
 @Consumes(MediaType.APPLICATION_JSON)

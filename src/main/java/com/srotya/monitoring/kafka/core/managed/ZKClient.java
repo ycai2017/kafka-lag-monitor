@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics.core.managed;
+package com.srotya.monitoring.kafka.core.managed;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +28,9 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
-import com.symantec.cpe.analytics.KafkaMonitorConfiguration;
-import com.symantec.cpe.analytics.core.kafka.KafkaConsumerGroupMetadata;
-import com.symantec.cpe.analytics.kafka.KafkaConsumerOffsetUtil;
+import com.srotya.monitoring.kafka.KafkaMonitorConfiguration;
+import com.srotya.monitoring.kafka.core.kafka.KafkaConsumerGroupMetadata;
+import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
 
 import io.dropwizard.lifecycle.Managed;
 

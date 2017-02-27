@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics;
+package com.srotya.monitoring.kafka;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -21,8 +21,8 @@ import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
-import com.symantec.cpe.analytics.core.managed.ZKClient;
-import com.symantec.cpe.analytics.resources.kafka.KafkaResource;
+import com.srotya.monitoring.kafka.core.managed.ZKClient;
+import com.srotya.monitoring.kafka.resources.KafkaResource;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;

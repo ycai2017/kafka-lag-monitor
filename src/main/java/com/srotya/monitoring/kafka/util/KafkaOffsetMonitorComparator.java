@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.symantec.cpe.analytics.kafka;
+package com.srotya.monitoring.kafka.util;
 
 import com.google.common.collect.ComparisonChain;
-import com.symantec.cpe.analytics.core.kafka.KafkaOffsetMonitor;
+import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
 
 import java.util.Comparator;
 
