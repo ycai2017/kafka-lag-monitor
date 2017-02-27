@@ -39,8 +39,8 @@ public class ZKClient implements Managed {
 	private KafkaMonitorConfiguration kafkaConfiguration;
 	private RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
 	private CuratorFramework client;
-	private static final List<String> nonSpoutConsumerNodes = Arrays.asList("storm", "config", "consumers",
-			"controller_epoch", "zookeeper", "admin", "controller", "brokers");
+	private static final List<String> znodeExclusions = Arrays.asList("storm", "config", "controller_epoch",
+			"zookeeper", "admin", "controller", "brokers", "kafka-acl", "kafka-acl-changes", "isr_change_notification");
 
 	public ZKClient(KafkaMonitorConfiguration kafkaConfiguration) {
 		this.kafkaConfiguration = kafkaConfiguration;
@@ -89,7 +89,7 @@ public class ZKClient implements Managed {
 		List<String> rootChildren = (client.getChildren().forPath(kafkaConfiguration.getCommonZkRoot()));
 		List<String> activeSpoutConsumerGroupList = new ArrayList<String>();
 		for (String rootChild : rootChildren) {
-			if (!nonSpoutConsumerNodes.contains(rootChild)) {
+			if (!znodeExclusions.contains(rootChild)) {
 				activeSpoutConsumerGroupList.add(rootChild);
 			}
 		}
