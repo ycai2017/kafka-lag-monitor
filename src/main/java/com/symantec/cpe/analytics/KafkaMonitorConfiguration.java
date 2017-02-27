@@ -34,18 +34,6 @@ public class KafkaMonitorConfiguration extends Configuration {
 	private int refreshSeconds = 10;
 
 	@Valid
-	private String statsDHost = "localhost";
-
-	@Valid
-	private int statsDPort = 8125;
-
-	@Valid
-	private String statsDPrefix = "kafka-monitoring";
-
-	@Valid
-	private boolean pushToStatsD = false;
-
-	@Valid
 	private String commonZkRoot = "";
 	
 	@Valid
@@ -68,38 +56,6 @@ public class KafkaMonitorConfiguration extends Configuration {
 
 	public void setRefreshSeconds(int refreshSeconds) {
 		this.refreshSeconds = refreshSeconds;
-	}
-
-	public String getStatsDHost() {
-		return statsDHost;
-	}
-
-	public void setStatsDHost(String statsDHost) {
-		this.statsDHost = statsDHost;
-	}
-
-	public int getStatsDPort() {
-		return statsDPort;
-	}
-
-	public void setStatsDPort(int statsDPort) {
-		this.statsDPort = statsDPort;
-	}
-
-	public String getStatsDPrefix() {
-		return statsDPrefix;
-	}
-
-	public void setStatsDPrefix(String statsDPrefix) {
-		this.statsDPrefix = statsDPrefix;
-	}
-
-	public boolean isPushToStatsD() {
-		return pushToStatsD;
-	}
-
-	public void setPushToStatsD(boolean pushToStatsD) {
-		this.pushToStatsD = pushToStatsD;
 	}
 
 	/**

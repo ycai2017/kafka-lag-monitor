@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
-import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,6 @@ import kafka.javaapi.TopicMetadata;
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
-import kafka.utils.ZKStringSerializer$;
 
 public class KafkaConsumerOffsetUtil {
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerOffsetUtil.class);
@@ -61,16 +59,11 @@ public class KafkaConsumerOffsetUtil {
 	private KafkaMonitorConfiguration kafkaConfiguration;
 	private static KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = null;
 	private ZKClient zkClient;
-	private static ZkClient iotecZkClient;
 	private AtomicReference<ArrayList<KafkaOffsetMonitor>> references = null;
 
 	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
 		if (kafkaConsumerOffsetUtil == null) {
 			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient);
-		}
-		if (iotecZkClient == null) {
-			iotecZkClient = new ZkClient(kafkaConfiguration.getZookeeperUrls(), 10000, 10000,
-					ZKStringSerializer$.MODULE$);
 		}
 		return kafkaConsumerOffsetUtil;
 	}
@@ -96,7 +89,7 @@ public class KafkaConsumerOffsetUtil {
 					LoginContext lc = new LoginContext("Client");
 					lc.login();
 					subject = lc.getSubject();
-				}else {
+				} else {
 					Subject.getSubject(AccessController.getContext());
 				}
 				Subject.doAs(subject, new PrivilegedAction<Void>() {
@@ -111,7 +104,8 @@ public class KafkaConsumerOffsetUtil {
 							references.set(kafkaOffsetMonitors);
 							LOG.info("Updating new lag information");
 						} catch (Exception e) {
-							LOG.error("Error while collecting kafka consumer offset metrics", e);
+							LOG.error("Error while collecting kafka consumer offset metrics:"
+									+ kafkaConfiguration.getKafkaBroker() + ":" + kafkaConfiguration.getKafkaPort(), e);
 						}
 						return null;
 					}
