@@ -23,6 +23,7 @@ import javax.security.auth.login.LoginContext;
 
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.resources.KafkaResource;
+import com.srotya.monitoring.kafka.resources.PrometheusResource;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -60,6 +61,8 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 				environment.lifecycle().manage(zkClient);
 				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient);
 				environment.jersey().register(kafkaResource);
+				PrometheusResource prometheusResource = new PrometheusResource(configuration, zkClient);
+				environment.jersey().register(prometheusResource);
 				return null;
 			}
 		});

@@ -39,6 +39,7 @@ import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
 @Path("/kafka")
 @Consumes(MediaType.APPLICATION_JSON)
 public class KafkaResource {
+	
 	private KafkaMonitorConfiguration kafkaConfiguration;
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaResource.class);
 	private ZKClient zkClient;
@@ -61,12 +62,18 @@ public class KafkaResource {
 			KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 					zkClient);
 			List<KafkaOffsetMonitor> kafkaOffsetMonitors = kafkaConsumerOffsetUtil.getReferences().get();
-			if (outputType.equals("html")) {
+			switch (outputType) {
+			case "html":
 				responseType = MediaType.TEXT_HTML;
 				output = kafkaConsumerOffsetUtil.htmlOutput(kafkaOffsetMonitors);
-			} else {
+				break;
+			case "json":
 				ObjectMapper mapper = new ObjectMapper();
 				output = mapper.writeValueAsString(kafkaOffsetMonitors);
+				break;
+			case "prometheus":
+				output = KafkaConsumerOffsetUtil.toPrometheusFormat(kafkaOffsetMonitors);
+				break;
 			}
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
@@ -75,4 +82,5 @@ public class KafkaResource {
 		}
 		return Response.status(Response.Status.OK).entity(output).type(responseType).build();
 	}
+
 }
