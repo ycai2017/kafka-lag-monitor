@@ -15,13 +15,18 @@
  */
 package com.srotya.monitoring.kafka.util;
 
+import java.nio.ByteBuffer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +36,13 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.protocol.types.Field;
+import org.apache.kafka.common.protocol.types.Schema;
+import org.apache.kafka.common.protocol.types.Struct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +72,7 @@ public class KafkaConsumerOffsetUtil {
 	private static KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = null;
 	private ZKClient zkClient;
 	private AtomicReference<ArrayList<KafkaOffsetMonitor>> references = null;
+	private Map<String, KafkaOffsetMonitor> newConsumer = new ConcurrentHashMap<>();
 
 	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
 		if (kafkaConsumerOffsetUtil == null) {
@@ -72,12 +85,124 @@ public class KafkaConsumerOffsetUtil {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
 		this.references = new AtomicReference<>(new ArrayList<KafkaOffsetMonitor>());
+		Thread th = new Thread(new KafkaNewConsumerOffsetThread(this));
+		th.setDaemon(true);
+		th.start();
 	}
 
 	public void setupMonitoring() {
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleAtFixedRate(new KafkaConsumerOffsetThread(), 2, kafkaConfiguration.getRefreshSeconds(),
 				TimeUnit.SECONDS);
+	}
+
+	/**
+	 * ./kafka-console-consumer.sh --consumer.config /tmp/consumer.config \
+	 * --formatter
+	 * "kafka.coordinator.GroupMetadataManager\$OffsetsMessageFormatter" \
+	 * --zookeeper localhost:2181 --topic __consumer_offsets --from-beginning
+	 * 
+	 * @author ambud
+	 */
+	private class KafkaNewConsumerOffsetThread implements Runnable {
+
+		private static final String SELF_CONSUMER_GROUP = "_kafka_monitor";
+		private KafkaConsumerOffsetUtil util;
+
+		public KafkaNewConsumerOffsetThread(KafkaConsumerOffsetUtil util) {
+			this.util = util;
+		}
+
+		@Override
+		public void run() {
+			try {
+				Subject subject = null;
+				if (kafkaConfiguration.isKerberos()) {
+					LoginContext lc = new LoginContext("Client");
+					lc.login();
+					subject = lc.getSubject();
+				} else {
+					Subject.getSubject(AccessController.getContext());
+				}
+				Subject.doAs(subject, new PrivilegedAction<Void>() {
+
+					@Override
+					public Void run() {
+						try {
+							Properties props = new Properties();
+							props.put("bootstrap.servers",
+									kafkaConfiguration.getKafkaBroker() + ":" + kafkaConfiguration.getKafkaPort());
+							String suffix = UUID.randomUUID().toString();
+							suffix = suffix.replace("-", "");
+							suffix = suffix.substring(0, suffix.length() - 8);
+							suffix = SELF_CONSUMER_GROUP + suffix;
+							props.put("group.id", suffix);
+							props.put("key.deserializer",
+									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
+							props.put("value.deserializer",
+									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
+							props.put("enable.auto.commit", "true");
+							props.put("auto.commit.interval.ms", "1000");
+							props.put("security.protocol", System.getProperty("security.protocol"));
+							@SuppressWarnings("resource")
+							KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(props);
+							consumer.subscribe(Arrays.asList("__consumer_offsets"));
+							for (TopicPartition topicPartition : consumer.assignment()) {
+								consumer.seekToEnd(topicPartition);
+							}
+							System.out.println("Connected to Kafka consumer offset topic");
+							Schema schema = new Schema(new Field("group", Schema.STRING),
+									new Field("topic", Schema.STRING), new Field("partition", Schema.INT32));
+							while (true) {
+								ConsumerRecords<byte[], byte[]> records = consumer.poll(10000);
+								for (ConsumerRecord<byte[], byte[]> consumerRecord : records) {
+									if (consumerRecord.value() != null && consumerRecord.key() != null) {
+										ByteBuffer key = ByteBuffer.wrap(consumerRecord.key());
+										short version = key.getShort();
+										if (version < 2) {
+											try {
+												Struct struct = (Struct) schema.read(key);
+												if (struct.getString("group").equalsIgnoreCase(suffix)) {
+													continue;
+												}
+												String group = struct.getString("group");
+												String topic = struct.getString("topic");
+												int partition = struct.getInt("partition");
+												SimpleConsumer con = util.getConsumer(
+														util.kafkaConfiguration.getKafkaBroker(),
+														util.kafkaConfiguration.getKafkaPort(), clientName);
+												long realOffset = util.getLastOffset(con, struct.getString("topic"),
+														partition, -1, clientName);
+												long consumerOffset = readOffsetMessageValue(
+														ByteBuffer.wrap(consumerRecord.value()));
+												long lag = realOffset - consumerOffset;
+												KafkaOffsetMonitor mon = new KafkaOffsetMonitor(group, topic, partition,
+														realOffset, consumerOffset, lag);
+												newConsumer.put(group + "%" + topic + "%" + partition, mon);
+											} catch (Exception e) {
+												e.printStackTrace();
+											}
+										}
+									}
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						return null;
+					}
+
+					private long readOffsetMessageValue(ByteBuffer buffer) {
+						buffer.getShort(); // read and ignore version
+						long offset = buffer.getLong();
+						return offset;
+					}
+				});
+			} catch (Exception e) {
+			}
+
+		}
+
 	}
 
 	private class KafkaConsumerOffsetThread implements Runnable {
@@ -281,6 +406,10 @@ public class KafkaConsumerOffsetUtil {
 	public AtomicReference<ArrayList<KafkaOffsetMonitor>> getReferences() {
 		return references;
 	}
+	
+	public Map<String, KafkaOffsetMonitor> getNewConsumer() {
+		return newConsumer;
+	}
 
 	/**
 	 * https://prometheus.io/docs/instrumenting/exposition_formats/
@@ -292,7 +421,9 @@ public class KafkaConsumerOffsetUtil {
 	public static String toPrometheusFormat(List<KafkaOffsetMonitor> kafkaOffsetMonitors) {
 		StringBuilder builder = new StringBuilder();
 		for (KafkaOffsetMonitor kafkaOffsetMonitor : kafkaOffsetMonitors) {
-			builder.append(String.format("# metrics for topic-partition:%s-%d and consumer-group:%s\n", kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getConsumerGroupName()));
+			builder.append(String.format("# metrics for topic-partition:%s-%d and consumer-group:%s\n",
+					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(),
+					kafkaOffsetMonitor.getConsumerGroupName()));
 			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",parition=\"%d\"} %d\n", "lag",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLag()));

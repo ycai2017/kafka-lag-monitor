@@ -80,4 +80,13 @@ public class KafkaOffsetMonitor {
     public void setLag(long lag) {
         this.lag = lag;
     }
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "KafkaOffsetMonitor [consumerGroupName=" + consumerGroupName + ", topic=" + topic + ", partition="
+				+ partition + ", logSize=" + logSize + ", consumerOffset=" + consumerOffset + ", lag=" + lag + "]";
+	}
 }

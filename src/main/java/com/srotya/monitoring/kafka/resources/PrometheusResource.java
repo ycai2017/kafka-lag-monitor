@@ -15,6 +15,7 @@
  */
 package com.srotya.monitoring.kafka.resources;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -49,7 +50,10 @@ public class PrometheusResource {
 	public String getKafkaOffsets() {
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 				zkClient);
-		List<KafkaOffsetMonitor> kafkaOffsetMonitors = kafkaConsumerOffsetUtil.getReferences().get();
+		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
+		for (KafkaOffsetMonitor mon : kafkaConsumerOffsetUtil.getNewConsumer().values()) {
+			kafkaOffsetMonitors.add(mon);
+		}
 		return KafkaConsumerOffsetUtil.toPrometheusFormat(kafkaOffsetMonitors);
 	}
 
