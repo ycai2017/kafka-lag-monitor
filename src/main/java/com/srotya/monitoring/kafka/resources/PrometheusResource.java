@@ -15,6 +15,8 @@
  */
 package com.srotya.monitoring.kafka.resources;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,10 @@ import com.srotya.monitoring.kafka.KafkaMonitorConfiguration;
 import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
+
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.exporter.common.TextFormat;
 
 /**
  * @author ambud
@@ -47,14 +53,35 @@ public class PrometheusResource {
 
 	@GET
 	@Produces({ MediaType.TEXT_PLAIN })
-	public String getKafkaOffsets() {
+	public String getKafkaOffsets() throws IOException {
+		CollectorRegistry registry = new CollectorRegistry();
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 				zkClient);
 		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
-		for (KafkaOffsetMonitor mon : kafkaConsumerOffsetUtil.getNewConsumer().values()) {
-			kafkaOffsetMonitors.add(mon);
+		kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getNewConsumer().values());
+
+		Gauge conOffset = Gauge.build("consumer_offset", "Consumer offsets").labelNames("topic", "group", "partition")
+				.create();
+		Gauge prodOffset = Gauge.build("producer_offset", "Producer offsets").labelNames("topic", "group", "partition")
+				.create();
+		Gauge lag = Gauge.build("lag", "Producer-Consumer lag").labelNames("topic", "group", "partition").create();
+		
+		registry.register(lag);
+		registry.register(prodOffset);
+		registry.register(conOffset);
+
+		for (KafkaOffsetMonitor mon : kafkaOffsetMonitors) {
+			conOffset.labels(mon.getTopic(), mon.getConsumerGroupName(), String.valueOf(mon.getPartition()))
+					.set(mon.getConsumerOffset());
+			prodOffset.labels(mon.getTopic(), mon.getConsumerGroupName(), String.valueOf(mon.getPartition()))
+					.set(mon.getLogSize());
+			lag.labels(mon.getTopic(), mon.getConsumerGroupName(), String.valueOf(mon.getPartition()))
+					.set(mon.getLag());
 		}
-		return KafkaConsumerOffsetUtil.toPrometheusFormat(kafkaOffsetMonitors);
+
+		StringWriter writer = new StringWriter();
+		TextFormat.write004(writer, registry.metricFamilySamples());
+		return writer.toString();
 	}
 
 }
