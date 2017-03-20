@@ -15,6 +15,7 @@
  */
 package com.srotya.monitoring.kafka.resources;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -61,7 +62,8 @@ public class KafkaResource {
 		try {
 			KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 					zkClient);
-			List<KafkaOffsetMonitor> kafkaOffsetMonitors = kafkaConsumerOffsetUtil.getReferences().get();
+			List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
+			kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getNewConsumer().values());
 			switch (outputType) {
 			case "html":
 				responseType = MediaType.TEXT_HTML;

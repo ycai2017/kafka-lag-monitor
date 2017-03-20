@@ -1,7 +1,9 @@
 ## Project Description
 This is an application/plugin to track the offsets for all the consumer groups in a Kafka cluster. This app will collect offset information for both a regular Kafka consumer and also Storm-Kafka Spout. 
 
-The app provides a rest endpoint that can be called on-demand to get this information. It can also be used as an input plugin for Collectd.   
+The app provides a rest endpoint that can be called on-demand to get this information. It can also be used as an input plugin for Collectd.
+
+```Update: this project now supports new Kafka Consumers as well``` 
 
 ## Installation (install commands)
 

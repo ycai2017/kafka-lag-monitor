@@ -93,6 +93,7 @@ public class KafkaLagMonitor
 						ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 						kafkaOffsetMonitors.addAll(util.getSpoutKafkaOffsetMonitors());
 						kafkaOffsetMonitors.addAll(util.getRegularKafkaOffsetMonitors());
+						kafkaOffsetMonitors.addAll(util.getNewConsumer().values());
 						Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
 						references.set(kafkaOffsetMonitors);
 					} catch (Exception e) {

@@ -46,7 +46,7 @@ public class PrometheusResource {
 	}
 
 	@GET
-	@Produces({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.TEXT_PLAIN })
 	public String getKafkaOffsets() {
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 				zkClient);
