@@ -441,13 +441,13 @@ public class KafkaConsumerOffsetUtil {
 			builder.append(String.format("# metrics for topic-partition:%s-%d and consumer-group:%s\n",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(),
 					kafkaOffsetMonitor.getConsumerGroupName()));
-			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",parition=\"%d\"} %d\n", "lag",
+			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "lag",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLag()));
-			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",parition=\"%d\"} %d\n", "consumer_offset",
+			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "consumer_offset",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getConsumerOffset()));
-			builder.append(String.format("%s{topic=\"%s\",parition=\"%d\"} %d\n", "producer_offset",
+			builder.append(String.format("%s{topic=\"%s\",partition=\"%d\"} %d\n", "producer_offset",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLogSize()));
 			builder.append("\n");
 		}
