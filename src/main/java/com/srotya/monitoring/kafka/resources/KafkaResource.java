@@ -64,6 +64,7 @@ public class KafkaResource {
 					zkClient);
 			List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
 			kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getNewConsumer().values());
+			kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getTopicOffsets());
 			switch (outputType) {
 			case "html":
 				responseType = MediaType.TEXT_HTML;

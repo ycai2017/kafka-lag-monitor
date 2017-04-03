@@ -96,6 +96,10 @@ public class ZKClient implements Managed {
 		return activeSpoutConsumerGroupList;
 	}
 
+	public List<String> getTopics() throws Exception {
+		return client.getChildren().forPath("/brokers/topics");
+	}
+
 	public List<String> getChildren(String path) throws Exception {
 		return client.getChildren().forPath(path);
 	}

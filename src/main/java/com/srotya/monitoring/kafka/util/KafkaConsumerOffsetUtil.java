@@ -241,6 +241,23 @@ public class KafkaConsumerOffsetUtil {
 		}
 	}
 
+	public List<KafkaOffsetMonitor> getTopicOffsets() throws Exception {
+		List<KafkaOffsetMonitor> monitors = new ArrayList<>();
+		SimpleConsumer consumer = getConsumer(kafkaConfiguration.getKafkaBroker(), kafkaConfiguration.getKafkaPort(),
+				clientName);
+		for (String topic : zkClient.getTopics()) {
+			List<TopicPartitionLeader> partitions = getPartitions(consumer, topic);
+			for (TopicPartitionLeader partition : partitions) {
+				consumer = getConsumer(partition.getLeaderHost(), partition.getLeaderPort(), clientName);
+				long kafkaTopicOffset = getLastOffset(consumer, topic, partition.getPartitionId(), -1, clientName);
+				KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor("_root", topic,
+						partition.getPartitionId(), kafkaTopicOffset, 0, 0);
+				monitors.add(kafkaOffsetMonitor);
+			}
+		}
+		return monitors;
+	}
+
 	public List<KafkaOffsetMonitor> getSpoutKafkaOffsetMonitors() throws Exception {
 		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 		List<String> activeSpoutConsumerGroupList = zkClient.getActiveSpoutConsumerGroups();
@@ -406,7 +423,7 @@ public class KafkaConsumerOffsetUtil {
 	public AtomicReference<ArrayList<KafkaOffsetMonitor>> getReferences() {
 		return references;
 	}
-	
+
 	public Map<String, KafkaOffsetMonitor> getNewConsumer() {
 		return newConsumer;
 	}

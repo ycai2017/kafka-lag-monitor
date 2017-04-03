@@ -47,13 +47,12 @@ public class PrometheusResource {
 
 	@GET
 	@Produces({ MediaType.TEXT_PLAIN })
-	public String getKafkaOffsets() {
+	public String getKafkaOffsets() throws Exception {
 		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
 				zkClient);
 		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
-		for (KafkaOffsetMonitor mon : kafkaConsumerOffsetUtil.getNewConsumer().values()) {
-			kafkaOffsetMonitors.add(mon);
-		}
+		kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getTopicOffsets());
+		kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getNewConsumer().values());
 		return KafkaConsumerOffsetUtil.toPrometheusFormat(kafkaOffsetMonitors);
 	}
 
