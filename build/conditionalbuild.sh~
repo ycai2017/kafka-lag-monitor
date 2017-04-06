@@ -20,7 +20,7 @@ if [ "master" == "$TRAVIS_BRANCH" ]; then
     printf "Master branch will cut a release to Maven central"
     mkdir -p "/tmp/secrets"
     printf "Extracting SSH Key"
-    openssl aes-256-cbc -K $encrypted_1ea0453ea741_key -iv $encrypted_1ea0453ea741_iv -in build/secrets.tar.enc -out /tmp/secrets/secrets.tar -d
+    openssl aes-256-cbc -K $$encrypted_1ea0453ea741_key -iv $encrypted_1ea0453ea741_iv -in build/secrets.tar.enc -out /tmp/secrets/secrets.tar -d
     tar xf /tmp/secrets/secrets.tar -C /tmp/secrets/
     
     mkdir -p ~/.ssh
