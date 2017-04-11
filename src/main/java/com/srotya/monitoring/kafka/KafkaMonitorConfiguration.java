@@ -41,6 +41,9 @@ public class KafkaMonitorConfiguration extends Configuration {
 	
 	@Valid
 	private int kafkaPort = 9092;
+	
+	@Valid
+	private String consumerGroupName = "_kafka_monitor";
 
 	public String getZookeeperUrls() {
 		return zookeeperUrls;
@@ -128,5 +131,19 @@ public class KafkaMonitorConfiguration extends Configuration {
 	 */
 	public void setKafkaPort(int kafkaPort) {
 		this.kafkaPort = kafkaPort;
+	}
+
+	/**
+	 * @return the consumerGroupName
+	 */
+	public String getConsumerGroupName() {
+		return consumerGroupName;
+	}
+
+	/**
+	 * @param consumerGroupName the consumerGroupName to set
+	 */
+	public void setConsumerGroupName(String consumerGroupName) {
+		this.consumerGroupName = consumerGroupName;
 	}
 }

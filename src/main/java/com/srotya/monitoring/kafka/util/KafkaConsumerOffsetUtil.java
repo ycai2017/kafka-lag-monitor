@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -106,7 +105,6 @@ public class KafkaConsumerOffsetUtil {
 	 */
 	private class KafkaNewConsumerOffsetThread implements Runnable {
 
-		private static final String SELF_CONSUMER_GROUP = "_kafka_monitor";
 		private KafkaConsumerOffsetUtil util;
 
 		public KafkaNewConsumerOffsetThread(KafkaConsumerOffsetUtil util) {
@@ -132,11 +130,7 @@ public class KafkaConsumerOffsetUtil {
 							Properties props = new Properties();
 							props.put("bootstrap.servers",
 									kafkaConfiguration.getKafkaBroker() + ":" + kafkaConfiguration.getKafkaPort());
-							String suffix = UUID.randomUUID().toString();
-							suffix = suffix.replace("-", "");
-							suffix = suffix.substring(0, suffix.length() - 8);
-							suffix = SELF_CONSUMER_GROUP + suffix;
-							props.put("group.id", suffix);
+							props.put("group.id", kafkaConfiguration.getConsumerGroupName());
 							props.put("key.deserializer",
 									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
 							props.put("value.deserializer",
@@ -162,7 +156,8 @@ public class KafkaConsumerOffsetUtil {
 										if (version < 2) {
 											try {
 												Struct struct = (Struct) schema.read(key);
-												if (struct.getString("group").equalsIgnoreCase(suffix)) {
+												if (struct.getString("group")
+														.equalsIgnoreCase(kafkaConfiguration.getConsumerGroupName())) {
 													continue;
 												}
 												String group = struct.getString("group");
