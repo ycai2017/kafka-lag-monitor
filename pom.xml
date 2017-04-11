@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.srotya.monitoring</groupId>
   <artifactId>kafka-lag-monitor</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
   <name>kafka-lag-monitor</name>
   <properties>
     <commons.lang3.version>3.3.2</commons.lang3.version>
@@ -195,7 +195,7 @@
     <connection>scm:git:git@github.com:srotya/kafka-lag-monitor.git</connection>
     <developerConnection>scm:git:git@github.com:srotya/kafka-lag-monitor.git</developerConnection>
     <url>https://github.com/srotya/kafka-lag-monitor.git</url>
-    <tag>kafka-lag-monitor-0.0.2</tag>
+    <tag>HEAD</tag>
   </scm>
   <repositories>
     <repository>
