@@ -16,6 +16,7 @@
 package com.srotya.monitoring.kafka.util;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -72,6 +75,7 @@ public class KafkaConsumerOffsetUtil {
 	private ZKClient zkClient;
 	private AtomicReference<ArrayList<KafkaOffsetMonitor>> references = null;
 	private Map<String, KafkaOffsetMonitor> newConsumer = new ConcurrentHashMap<>();
+	private Queue<String> brokerHosts;
 
 	public static KafkaConsumerOffsetUtil getInstance(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
 		if (kafkaConsumerOffsetUtil == null) {
@@ -84,6 +88,10 @@ public class KafkaConsumerOffsetUtil {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.zkClient = zkClient;
 		this.references = new AtomicReference<>(new ArrayList<KafkaOffsetMonitor>());
+		brokerHosts = new ArrayBlockingQueue<>(kafkaConfiguration.getKafkaBroker().length);
+		for (String broker : kafkaConfiguration.getKafkaBroker()) {
+			brokerHosts.add(broker);
+		}
 		Thread th = new Thread(new KafkaNewConsumerOffsetThread(this));
 		th.setDaemon(true);
 		th.start();
@@ -129,7 +137,7 @@ public class KafkaConsumerOffsetUtil {
 						try {
 							Properties props = new Properties();
 							props.put("bootstrap.servers",
-									kafkaConfiguration.getKafkaBroker() + ":" + kafkaConfiguration.getKafkaPort());
+									brokerHosts.peek() + ":" + kafkaConfiguration.getKafkaPort());
 							props.put("group.id", kafkaConfiguration.getConsumerGroupName());
 							props.put("key.deserializer",
 									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
@@ -163,8 +171,7 @@ public class KafkaConsumerOffsetUtil {
 												String group = struct.getString("group");
 												String topic = struct.getString("topic");
 												int partition = struct.getInt("partition");
-												SimpleConsumer con = util.getConsumer(
-														util.kafkaConfiguration.getKafkaBroker(),
+												SimpleConsumer con = util.getConsumer(util.brokerHosts.peek(),
 														util.kafkaConfiguration.getKafkaPort(), clientName);
 												long realOffset = util.getLastOffset(con, struct.getString("topic"),
 														partition, -1, clientName);
@@ -183,6 +190,7 @@ public class KafkaConsumerOffsetUtil {
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
+							util.brokerHosts.add(util.brokerHosts.remove());
 						}
 						return null;
 					}
@@ -238,17 +246,22 @@ public class KafkaConsumerOffsetUtil {
 
 	public List<KafkaOffsetMonitor> getTopicOffsets() throws Exception {
 		List<KafkaOffsetMonitor> monitors = new ArrayList<>();
-		SimpleConsumer consumer = getConsumer(kafkaConfiguration.getKafkaBroker(), kafkaConfiguration.getKafkaPort(),
-				clientName);
-		for (String topic : zkClient.getTopics()) {
-			List<TopicPartitionLeader> partitions = getPartitions(consumer, topic);
-			for (TopicPartitionLeader partition : partitions) {
-				consumer = getConsumer(partition.getLeaderHost(), partition.getLeaderPort(), clientName);
-				long kafkaTopicOffset = getLastOffset(consumer, topic, partition.getPartitionId(), -1, clientName);
-				KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor("_root", topic,
-						partition.getPartitionId(), kafkaTopicOffset, 0, 0);
-				monitors.add(kafkaOffsetMonitor);
+		SimpleConsumer consumer = getConsumer(brokerHosts.peek(), kafkaConfiguration.getKafkaPort(), clientName);
+		try {
+			for (String topic : zkClient.getTopics()) {
+				List<TopicPartitionLeader> partitions = getPartitions(consumer, topic);
+				for (TopicPartitionLeader partition : partitions) {
+					consumer = getConsumer(partition.getLeaderHost(), partition.getLeaderPort(), clientName);
+					long kafkaTopicOffset = getLastOffset(consumer, topic, partition.getPartitionId(), -1, clientName);
+					KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor("_root", topic,
+							partition.getPartitionId(), kafkaTopicOffset, 0, 0);
+					monitors.add(kafkaOffsetMonitor);
+				}
 			}
+		} catch (ClosedChannelException e) {
+			brokerHosts.add(brokerHosts.remove());
+		} catch (Exception e) {
+			throw e;
 		}
 		return monitors;
 	}
@@ -294,33 +307,41 @@ public class KafkaConsumerOffsetUtil {
 	}
 
 	public List<KafkaOffsetMonitor> getRegularKafkaOffsetMonitors() throws Exception {
-		List<KafkaConsumerGroupMetadata> kafkaConsumerGroupMetadataList = zkClient.getActiveRegularConsumersAndTopics();
-		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
-		SimpleConsumer consumer = getConsumer(kafkaConfiguration.getKafkaBroker(), kafkaConfiguration.getKafkaPort(),
-				clientName);
-		for (KafkaConsumerGroupMetadata kafkaConsumerGroupMetadata : kafkaConsumerGroupMetadataList) {
-			List<TopicPartitionLeader> partitions = getPartitions(consumer, kafkaConsumerGroupMetadata.getTopic());
-			for (TopicPartitionLeader partition : partitions) {
-				consumer = getConsumer(partition.getLeaderHost(), partition.getLeaderPort(), clientName);
-				long kafkaTopicOffset = getLastOffset(consumer, kafkaConsumerGroupMetadata.getTopic(),
-						partition.getPartitionId(), -1, clientName);
-				long consumerOffset = 0;
-				if (kafkaConsumerGroupMetadata.getPartitionOffsetMap()
-						.get(Integer.toString(partition.getPartitionId())) != null) {
-					consumerOffset = kafkaConsumerGroupMetadata.getPartitionOffsetMap()
-							.get(Integer.toString(partition.getPartitionId()));
+		try {
+			List<KafkaConsumerGroupMetadata> kafkaConsumerGroupMetadataList = zkClient
+					.getActiveRegularConsumersAndTopics();
+			List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
+			SimpleConsumer consumer = getConsumer(brokerHosts.peek(), kafkaConfiguration.getKafkaPort(), clientName);
+			for (KafkaConsumerGroupMetadata kafkaConsumerGroupMetadata : kafkaConsumerGroupMetadataList) {
+				List<TopicPartitionLeader> partitions = getPartitions(consumer, kafkaConsumerGroupMetadata.getTopic());
+				for (TopicPartitionLeader partition : partitions) {
+					consumer = getConsumer(partition.getLeaderHost(), partition.getLeaderPort(), clientName);
+					long kafkaTopicOffset = getLastOffset(consumer, kafkaConsumerGroupMetadata.getTopic(),
+							partition.getPartitionId(), -1, clientName);
+					long consumerOffset = 0;
+					if (kafkaConsumerGroupMetadata.getPartitionOffsetMap()
+							.get(Integer.toString(partition.getPartitionId())) != null) {
+						consumerOffset = kafkaConsumerGroupMetadata.getPartitionOffsetMap()
+								.get(Integer.toString(partition.getPartitionId()));
+					}
+					long lag = kafkaTopicOffset - consumerOffset;
+					KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor(
+							kafkaConsumerGroupMetadata.getConsumerGroup(), kafkaConsumerGroupMetadata.getTopic(),
+							partition.getPartitionId(), kafkaTopicOffset, consumerOffset, lag);
+					kafkaOffsetMonitors.add(kafkaOffsetMonitor);
 				}
-				long lag = kafkaTopicOffset - consumerOffset;
-				KafkaOffsetMonitor kafkaOffsetMonitor = new KafkaOffsetMonitor(
-						kafkaConsumerGroupMetadata.getConsumerGroup(), kafkaConsumerGroupMetadata.getTopic(),
-						partition.getPartitionId(), kafkaTopicOffset, consumerOffset, lag);
-				kafkaOffsetMonitors.add(kafkaOffsetMonitor);
 			}
+			return kafkaOffsetMonitors;
+		} catch (ClosedChannelException e) {
+			brokerHosts.add(brokerHosts.remove());
+			return new ArrayList<>();
+		} catch (Exception e) {
+			throw e;
 		}
-		return kafkaOffsetMonitors;
 	}
 
-	public List<TopicPartitionLeader> getPartitions(SimpleConsumer consumer, String topic) {
+	public List<TopicPartitionLeader> getPartitions(SimpleConsumer consumer, String topic)
+			throws ClosedChannelException {
 		List<TopicPartitionLeader> partitions = new ArrayList<TopicPartitionLeader>();
 		TopicMetadataRequest topicMetadataRequest = new TopicMetadataRequest(Collections.singletonList(topic));
 		TopicMetadataResponse topicMetadataResponse = consumer.send(topicMetadataRequest);

@@ -30,7 +30,9 @@ zookeeperUrls: xxx.xxx.com
 refreshSeconds: 60
 jaasConf: /root/jaas.conf
 kerberos: true
-kafkaBroker: xxxx.xxx.com
+kafkaBroker:
+	- xxx1.xxx.com
+	- xxx2.xxx.com
 kafkaPort: 6667
 commonZkRoot: /
 

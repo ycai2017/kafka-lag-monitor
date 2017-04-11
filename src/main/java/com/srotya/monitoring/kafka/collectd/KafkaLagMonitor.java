@@ -50,7 +50,6 @@ public class KafkaLagMonitor
 	private static final String PLUGIN_NAME = "lag";
 	private String jaas = "./jaas.conf";
 	private boolean kerberos = false;
-	private String kafkaBroker = "localhost";
 	private int kafkaPort = 9092;
 	private String zkRoot = "/";
 	private String zkUrl = "localhost:2181";
@@ -138,6 +137,7 @@ public class KafkaLagMonitor
 	@Override
 	public int config(OConfigItem conf) {
 		List<OConfigItem> subConf = conf.getChildren();
+		List<String> brokers = new ArrayList<>();
 		for (OConfigItem item : subConf) {
 			System.err.println("Configuring:" + item);
 			switch (item.getKey().toLowerCase()) {
@@ -148,7 +148,7 @@ public class KafkaLagMonitor
 				kerberos = item.getValues().iterator().next().getBoolean();
 				break;
 			case "kafkahost":
-				kafkaBroker = item.getValues().iterator().next().getString();
+				brokers.add(item.getValues().iterator().next().getString());
 				break;
 			case "kafkaport":
 				kafkaPort = item.getValues().iterator().next().getNumber().intValue();
@@ -168,7 +168,7 @@ public class KafkaLagMonitor
 		configuration.setCommonZkRoot(zkRoot);
 		configuration.setJaasConf(jaas);
 		configuration.setKerberos(kerberos);
-		configuration.setKafkaBroker(kafkaBroker);
+		configuration.setKafkaBroker(brokers.toArray(new String[1]));
 		configuration.setKafkaPort(kafkaPort);
 		configuration.setZookeeperUrls(zkUrl);
 		try {

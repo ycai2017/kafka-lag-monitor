@@ -35,13 +35,13 @@ public class KafkaMonitorConfiguration extends Configuration {
 
 	@Valid
 	private String commonZkRoot = "";
-	
+
 	@Valid
-	private String kafkaBroker = "localhost";
-	
+	private String[] kafkaBroker = new String[] { "localhost" };
+
 	@Valid
 	private int kafkaPort = 9092;
-	
+
 	@Valid
 	private String consumerGroupName = "_kafka_monitor";
 
@@ -99,7 +99,8 @@ public class KafkaMonitorConfiguration extends Configuration {
 	}
 
 	/**
-	 * @param commonZkRoot the commonZkRoot to set
+	 * @param commonZkRoot
+	 *            the commonZkRoot to set
 	 */
 	public void setCommonZkRoot(String commonZkRoot) {
 		this.commonZkRoot = commonZkRoot;
@@ -108,14 +109,14 @@ public class KafkaMonitorConfiguration extends Configuration {
 	/**
 	 * @return the kafkaBroker
 	 */
-	public String getKafkaBroker() {
+	public String[] getKafkaBroker() {
 		return kafkaBroker;
 	}
 
 	/**
 	 * @param kafkaBroker the kafkaBroker to set
 	 */
-	public void setKafkaBroker(String kafkaBroker) {
+	public void setKafkaBroker(String[] kafkaBroker) {
 		this.kafkaBroker = kafkaBroker;
 	}
 
@@ -127,7 +128,8 @@ public class KafkaMonitorConfiguration extends Configuration {
 	}
 
 	/**
-	 * @param kafkaPort the kafkaPort to set
+	 * @param kafkaPort
+	 *            the kafkaPort to set
 	 */
 	public void setKafkaPort(int kafkaPort) {
 		this.kafkaPort = kafkaPort;
@@ -141,7 +143,8 @@ public class KafkaMonitorConfiguration extends Configuration {
 	}
 
 	/**
-	 * @param consumerGroupName the consumerGroupName to set
+	 * @param consumerGroupName
+	 *            the consumerGroupName to set
 	 */
 	public void setConsumerGroupName(String consumerGroupName) {
 		this.consumerGroupName = consumerGroupName;
