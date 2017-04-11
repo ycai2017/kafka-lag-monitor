@@ -12,7 +12,12 @@ Pre-requisites:
 1. Java 8
 2. Maven 3+ 
 
-Run:
+
+Download:
+Please refer to releases section links to latest downloads:
+https://github.com/srotya/kafka-lag-monitor/releases/
+
+Build yourself:
 ```
 git clone https://github.com/srotya/kafka-monitoring-tool.git
 mvn clean package
@@ -31,8 +36,8 @@ refreshSeconds: 60
 jaasConf: /root/jaas.conf
 kerberos: true
 kafkaBroker:
-	- xxx1.xxx.com
-	- xxx2.xxx.com
+   - xxx1.xxx.com
+   - xxx2.xxx.com
 kafkaPort: 6667
 commonZkRoot: /
 
