@@ -17,6 +17,7 @@ package com.srotya.monitoring.kafka.resources;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,6 +28,7 @@ import com.srotya.monitoring.kafka.KafkaMonitorConfiguration;
 import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
+import com.srotya.sidewinder.core.storage.StorageEngine;
 
 /**
  * @author ambud
@@ -34,25 +36,21 @@ import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
 @Path("/metrics")
 public class PrometheusResource {
 
-	private KafkaMonitorConfiguration kafkaConfiguration;
-	private ZKClient zkClient;
+	private KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil;
 
-	public PrometheusResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient) {
-		this.kafkaConfiguration = kafkaConfiguration;
-		this.zkClient = zkClient;
-		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-				zkClient);
-		kafkaConsumerOffsetUtil.setupMonitoring();
+	public PrometheusResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient,
+			StorageEngine server) {
+		kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration, zkClient,
+				kafkaConfiguration.isEnableHistory(), server);
 	}
 
 	@GET
 	@Produces({ MediaType.TEXT_PLAIN })
 	public String getKafkaOffsets() throws Exception {
-		KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration,
-				zkClient);
-		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>(kafkaConsumerOffsetUtil.getReferences().get());
-		kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getTopicOffsets());
-		kafkaOffsetMonitors.addAll(kafkaConsumerOffsetUtil.getNewConsumer().values());
+		List<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<>();
+		for (Map<String, KafkaOffsetMonitor> map : kafkaConsumerOffsetUtil.getNewConsumer().values()) {
+			kafkaOffsetMonitors.addAll(map.values());
+		}
 		return KafkaConsumerOffsetUtil.toPrometheusFormat(kafkaOffsetMonitors);
 	}
 
