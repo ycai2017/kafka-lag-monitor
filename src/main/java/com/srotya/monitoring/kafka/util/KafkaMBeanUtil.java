@@ -15,8 +15,11 @@
  */
 package com.srotya.monitoring.kafka.util;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,49 +48,50 @@ public class KafkaMBeanUtil {
 	private static final Logger log = Logger.getLogger(KafkaMBeanUtil.class.getName());
 	private static Map<String, Long> throughputMap = new ConcurrentHashMap<>();
 
-	public static KafkaMBeanUtil getInstance(KafkaMonitorConfiguration conf, StorageEngine engine) {
+	public static KafkaMBeanUtil getInstance(KafkaMonitorConfiguration conf, StorageEngine engine) throws IOException {
 		if (self == null) {
 			self = new KafkaMBeanUtil(conf, engine);
 		}
 		return self;
 	}
 
-	public KafkaMBeanUtil(KafkaMonitorConfiguration conf, StorageEngine engine) {
+	public KafkaMBeanUtil(KafkaMonitorConfiguration conf, StorageEngine engine) throws IOException {
 		ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
 		es.scheduleAtFixedRate(new JMXMon(conf.getKafkaBroker(), conf.getJmxPort(), engine), 0, 10, TimeUnit.SECONDS);
 	}
 
 	public static class JMXMon implements Runnable {
 
-		private String[] brokers;
-		private int port;
+		private Map<String, JMXConnector> connectorMap;
 		private StorageEngine engine;
 
-		public JMXMon(String[] brokers, int port, StorageEngine engine) {
-			this.brokers = brokers;
-			this.port = port;
+		public JMXMon(String[] brokers, int port, StorageEngine engine) throws IOException {
+			connectorMap = new HashMap<>();
 			this.engine = engine;
+			for (String broker : brokers) {
+				String url = "service:jmx:rmi:///jndi/rmi://" + broker + ":" + port + "/jmxrmi";
+				JMXServiceURL serviceUrl = new JMXServiceURL(url);
+				JMXConnector jmxConnector = JMXConnectorFactory.connect(serviceUrl, null);
+				connectorMap.put(broker, jmxConnector);
+			}
 		}
 
 		@Override
 		public void run() {
-			for (String broker : brokers) {
+			for (Entry<String, JMXConnector> entry : connectorMap.entrySet()) {
+				JMXConnector jmxConnector = entry.getValue();
+				String broker = entry.getKey();
 				try {
-					String url = "service:jmx:rmi:///jndi/rmi://" + broker + ":" + port + "/jmxrmi";
-					JMXServiceURL serviceUrl = new JMXServiceURL(url);
-					JMXConnector jmxConnector = JMXConnectorFactory.connect(serviceUrl, null);
 					MBeanServerConnection conn = jmxConnector.getMBeanServerConnection();
 					Object attribute = conn.getAttribute(
 							new ObjectName("kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec"), "Count");
 					throughputMap.put(broker, (Long) attribute);
-					DataPoint dp = new DataPoint("kafka", THROUGHPUT, BYTES, Arrays.asList(broker),
-							System.currentTimeMillis(), (Long) attribute);
+					DataPoint dp = new DataPoint(KafkaConsumerOffsetUtil.DB_NAME, THROUGHPUT, BYTES,
+							Arrays.asList(broker), System.currentTimeMillis(), (Long) attribute);
 					engine.writeDataPoint(dp);
 					log.info("Broker throughput:" + broker + "\t" + attribute);
-					
-					
-					
 				} catch (Exception e) {
+					e.printStackTrace();
 					log.warn("JMX fetch failed for:" + broker, e);
 				}
 			}

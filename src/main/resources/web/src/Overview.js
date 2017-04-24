@@ -15,43 +15,87 @@
  */
  import React, { Component } from 'react';
  import styles from './Overview.css';
+ import Topic from './Topic.js';
 
  class Overview extends Component {
 
    constructor(props) {
 		super(props);
-		this.state = {count: 0};
+		this.state = {nodeCount: 0, topicCount: 0, throughputb: 0, throughputm: 0,replication:0, partitions:0 };
 	 }
 
    componentDidMount() {
+     fetch('http://localhost:9090/api/nodes')
+             .then(result=> {
+                 return result.json();
+             }).then(data=> {
+               this.setState({nodeCount:data})
+             });
     fetch('http://localhost:9090/api/topics')
             .then(result=> {
                 return result.json();
             }).then(data=> {
-              this.setState({count:data.length})
+              this.setState({topicCount:data.length})
             });
+            fetch('http://localhost:9090/api/throughputb')
+                    .then(result=> {
+                        return result.json();
+                    }).then(data=> {
+                      this.setState({throughputb:data})
+                    });
+                    fetch('http://localhost:9090/api/throughputm')
+                            .then(result=> {
+                                return result.json();
+                            }).then(data=> {
+                              this.setState({throughputm:data})
+                            });
+                    fetch('http://localhost:9090/api/replication')
+                            .then(result=> {
+                                return result.json();
+                            }).then(data=> {
+                              this.setState({replication:data})
+                            });
+                            fetch('http://localhost:9090/api/partitions')
+                                    .then(result=> {
+                                        return result.json();
+                                    }).then(data=> {
+                                      this.setState({partitions:data})
+                                    });
 	 }
 
    render() {
      return (
        <div className="con">
          <div className="row">
-          <div className="headers col-sm-3">
-            Nodes: <span className="count">{this.state.count}</span>
+          <div className="headers col-sm-6">
+            Nodes: <span className="count">{this.state.nodeCount}</span>
           </div>
-          <div className="headers col-sm-3">
-            Topics: <span className="count">{this.state.count}</span>
+          <div className="headers col-sm-6">
+            Topics: <span className="count">{this.state.topicCount}</span>
           </div>
-          <div className="headers col-sm-3">
-            Partitions: <span className="count">{this.state.count}</span>
           </div>
-          <div className="headers col-sm-3">
-            Replication: <span className="count">{this.state.count}</span>
+
+          <div className="row">
+          <div className="headers col-sm-6">
+            Partitions: <span className="count">{this.state.partitions}</span>
           </div>
-         </div>
+          <div className="headers col-sm-6">
+            Replication: <span className="count">{this.state.replication}</span>
+          </div>
+          </div>
+
+          <div className="row">
+          <div className="headers col-sm-6">
+            Throughput (Bytes): <span className="count">{this.state.throughputb}</span>
+          </div>
+          <div className="headers col-sm-6">
+            Throughput (Messages): <span className="count">{this.state.throughputm}</span>
+          </div>
+          </div>
          <hr className="rule"/>
          <div>
          testing
+
          </div>
        </div>
      );

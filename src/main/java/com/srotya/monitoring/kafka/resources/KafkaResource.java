@@ -40,6 +40,7 @@ import com.srotya.monitoring.kafka.core.kafka.KafkaOffsetMonitor;
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.util.KafkaConsumerOffsetUtil;
 import com.srotya.monitoring.kafka.util.KafkaMBeanUtil;
+import com.srotya.monitoring.kafka.util.KafkaUtils;
 import com.srotya.sidewinder.core.aggregators.AggregationFunction;
 import com.srotya.sidewinder.core.aggregators.windowed.DerivativeFunction;
 import com.srotya.sidewinder.core.filters.AnyFilter;
@@ -56,19 +57,28 @@ public class KafkaResource {
 	private KafkaConsumerOffsetUtil kafkaConsumerOffsetUtil;
 	private StorageEngine server;
 	private KafkaMonitorConfiguration kafkaConfiguration;
+	private KafkaUtils utils;
 
 	public KafkaResource(KafkaMonitorConfiguration kafkaConfiguration, ZKClient zkClient, StorageEngine server) {
 		this.kafkaConfiguration = kafkaConfiguration;
 		this.server = server;
 		kafkaConsumerOffsetUtil = KafkaConsumerOffsetUtil.getInstance(kafkaConfiguration, zkClient,
 				kafkaConfiguration.isEnableHistory(), server);
+		utils = KafkaUtils.getInstance(zkClient);
+	}
+
+	@Path("/nodes")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public int getNodes() throws Exception {
+		return utils.getBrokerCount();
 	}
 
 	@Path("/topics")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
-	public List<String> getTopics() {
-		return new ArrayList<>(kafkaConsumerOffsetUtil.getTopics());
+	public List<String> getTopics() throws Exception {
+		return new ArrayList<>(utils.getTopicMap().keySet());
 	}
 
 	@Path("/topics/{topic}/offset")
@@ -123,10 +133,40 @@ public class KafkaResource {
 		return throughput;
 	}
 
-	@Path("/brokers/throughput")
+	@Path("/throughputm")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
-	public long getBrokerThroughput(@QueryParam("last") long last) throws Exception {
+	public long getMessageThroughput(@QueryParam("last") long last) throws Exception {
+		long now = System.currentTimeMillis();
+		if (last == 0) {
+			last = now - 60_000;
+		} else {
+			last = now - (last * 60_000);
+		}
+		AggregationFunction aggregagateFunction = new DerivativeFunction();
+		int window = kafkaConfiguration.getRefreshSeconds();
+		aggregagateFunction.init(new Object[] { window });
+		Filter<List<String>> filter = new AnyFilter<>();
+		Map<String, List<DataPoint>> results = server.queryDataPoints(KafkaConsumerOffsetUtil.DB_NAME,
+				KafkaMBeanUtil.THROUGHPUT, KafkaConsumerOffsetUtil.OFFSET, last, now, null, filter, null,
+				aggregagateFunction);
+		long throughput = 0;
+
+		for (Entry<String, List<DataPoint>> entry : results.entrySet()) {
+			long sum = 0;
+			List<DataPoint> values = entry.getValue();
+			for (DataPoint dp : values) {
+				sum += dp.getLongValue();
+			}
+			throughput += (sum / values.size());
+		}
+		return throughput;
+	}
+
+	@Path("/throughputb")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public long getThroughput(@QueryParam("last") long last) throws Exception {
 		long now = System.currentTimeMillis();
 		if (last == 0) {
 			last = now - 60_000;
@@ -150,6 +190,40 @@ public class KafkaResource {
 			throughput += (sum / values.size());
 		}
 		return throughput;
+	}
+
+	@Path("/replication")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public int getAverageReplication() throws Exception {
+		try {
+			int sum = utils.getTopicMap().values().stream().mapToInt(v -> v.getReplicationFactor()).sum();
+			return sum / utils.getTopicMap().size();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	@Path("/partitions")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public int getPartitions() {
+		return utils.getTopicMap().values().stream().mapToInt(v -> v.getPartitionCount()).sum();
+	}
+
+	@Path("/topic/{topic}/partitions")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public int getPartitions(@PathParam("topic") String topic) {
+		return utils.getTopicMap().get(topic).getPartitionCount();
+	}
+
+	@Path("/topic/{topic}/replication")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public int getReplication(@PathParam("topic") String topic) {
+		return utils.getTopicMap().get(topic).getReplicationFactor();
 	}
 
 	@Path("/offset")
