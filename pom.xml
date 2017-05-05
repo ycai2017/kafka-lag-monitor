@@ -20,16 +20,40 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>com.srotya.sidewinder</groupId>
+      <artifactId>sidewinder-core</artifactId>
+      <version>0.0.19</version>
+    </dependency>
+    <dependency>
       <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-core</artifactId>
+      <artifactId>dropwizard-assets</artifactId>
       <version>${dropwizard.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.dropwizard.metrics</groupId>
+          <artifactId>metrics-logback</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- 		<dependency> -->
+    <!-- 			<groupId>io.dropwizard</groupId> -->
+    <!-- 			<artifactId>dropwizard-core</artifactId> -->
+    <!-- 			<version>${dropwizard.version}</version> -->
+    <!-- 			<exclusions> -->
+    <!-- 				<exclusion> -->
+    <!-- 					<groupId>org.slf4j</groupId> -->
+    <!-- 					<artifactId>slf4j-api</artifactId> -->
+    <!-- 				</exclusion> -->
+    <!-- 			</exclusions> -->
+    <!-- 		</dependency> -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

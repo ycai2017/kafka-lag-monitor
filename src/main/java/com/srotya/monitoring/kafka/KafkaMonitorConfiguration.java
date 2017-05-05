@@ -31,7 +31,7 @@ public class KafkaMonitorConfiguration extends Configuration {
 	private String zookeeperUrls = "localhost:2181";
 
 	@Valid
-	private int refreshSeconds = 10;
+	private int refreshSeconds = 5;
 
 	@Valid
 	private String commonZkRoot = "";
@@ -44,6 +44,18 @@ public class KafkaMonitorConfiguration extends Configuration {
 
 	@Valid
 	private String consumerGroupName = "_kafka_monitor";
+
+	@Valid
+	private String sidewinderConfigPath = "";
+
+	@Valid
+	private boolean enableHistory = false;
+	
+	@Valid
+	private boolean enableJMX = false;
+
+	@Valid
+	private int jmxPort = 9999;
 
 	public String getZookeeperUrls() {
 		return zookeeperUrls;
@@ -114,7 +126,8 @@ public class KafkaMonitorConfiguration extends Configuration {
 	}
 
 	/**
-	 * @param kafkaBroker the kafkaBroker to set
+	 * @param kafkaBroker
+	 *            the kafkaBroker to set
 	 */
 	public void setKafkaBroker(String[] kafkaBroker) {
 		this.kafkaBroker = kafkaBroker;
@@ -148,5 +161,63 @@ public class KafkaMonitorConfiguration extends Configuration {
 	 */
 	public void setConsumerGroupName(String consumerGroupName) {
 		this.consumerGroupName = consumerGroupName;
+	}
+
+	/**
+	 * @return the enableHistory
+	 */
+	public boolean isEnableHistory() {
+		return enableHistory;
+	}
+
+	/**
+	 * @param enableHistory
+	 *            the enableHistory to set
+	 */
+	public void setEnableHistory(boolean enableHistory) {
+		this.enableHistory = enableHistory;
+	}
+
+	/**
+	 * @return the sidewinderConfigPath
+	 */
+	public String getSidewinderConfigPath() {
+		return sidewinderConfigPath;
+	}
+
+	/**
+	 * @param sidewinderConfigPath
+	 *            the sidewinderConfigPath to set
+	 */
+	public void setSidewinderConfigPath(String sidewinderConfigPath) {
+		this.sidewinderConfigPath = sidewinderConfigPath;
+	}
+
+	/**
+	 * @return the jmxPort
+	 */
+	public int getJmxPort() {
+		return jmxPort;
+	}
+
+	/**
+	 * @param jmxPort the jmxPort to set
+	 */
+	public void setJmxPort(int jmxPort) {
+		this.jmxPort = jmxPort;
+	}
+
+	/**
+	 * @return the enableJMX
+	 */
+	public boolean isEnableJMX() {
+		return enableJMX;
+	}
+
+	/**
+	 * @param enableJMX the enableJMX to set
+	 */
+	public void setEnableJMX(boolean enableJMX) {
+		this.enableJMX = enableJMX;
 	}
 }

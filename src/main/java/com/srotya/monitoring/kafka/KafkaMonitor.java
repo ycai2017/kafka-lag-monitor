@@ -15,15 +15,22 @@
  */
 package com.srotya.monitoring.kafka;
 
+import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.HashMap;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.resources.KafkaResource;
+import com.srotya.monitoring.kafka.resources.KafkaThroughtputResource;
 import com.srotya.monitoring.kafka.resources.PrometheusResource;
+import com.srotya.monitoring.kafka.util.KafkaMBeanUtil;
+import com.srotya.monitoring.kafka.util.KafkaUtils;
+import com.srotya.sidewinder.core.storage.StorageEngine;
+import com.srotya.sidewinder.core.storage.mem.MemStorageEngine;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -32,13 +39,19 @@ import io.dropwizard.setup.Environment;
 public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 
 	private Subject subject = null;
+	private StorageEngine storageEngine;
 
 	@Override
 	public void initialize(Bootstrap<KafkaMonitorConfiguration> bootstrap) {
+		// bootstrap.addBundle(new AssetsBundle("/web", "/", "index.html"));
 	}
 
 	@Override
 	public void run(final KafkaMonitorConfiguration configuration, final Environment environment) throws Exception {
+		if (configuration.isEnableHistory()) {
+			storageEngine = new MemStorageEngine();
+			storageEngine.configure(new HashMap<>());
+		}
 		if (configuration.isKerberos()) {
 			System.setProperty("java.security.auth.login.config", configuration.getJaasConf());
 			System.setProperty("java.security.krb5.conf", "/etc/krb5.conf");
@@ -59,9 +72,23 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 			public Void run() {
 				ZKClient zkClient = new ZKClient(configuration);
 				environment.lifecycle().manage(zkClient);
-				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient);
+				environment.jersey().setUrlPattern("/api/*");
+				KafkaUtils.getInstance(zkClient);
+				if (configuration.isEnableJMX()) {
+					try {
+						KafkaMBeanUtil.getInstance(configuration, storageEngine);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (configuration.isEnableHistory()) {
+					KafkaThroughtputResource throughputResource = new KafkaThroughtputResource(configuration, zkClient,
+							storageEngine);
+					environment.jersey().register(throughputResource);
+				}
+				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient, storageEngine);
 				environment.jersey().register(kafkaResource);
-				PrometheusResource prometheusResource = new PrometheusResource(configuration, zkClient);
+				PrometheusResource prometheusResource = new PrometheusResource(configuration, zkClient, storageEngine);
 				environment.jersey().register(prometheusResource);
 				return null;
 			}

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.security.auth.Subject;
@@ -72,7 +73,7 @@ public class KafkaLagMonitor
 
 	@Override
 	public int read() {
-		KafkaConsumerOffsetUtil util = KafkaConsumerOffsetUtil.getInstance(configuration, zkClient);
+		KafkaConsumerOffsetUtil util = KafkaConsumerOffsetUtil.getInstance(configuration, zkClient, false, null);
 		try {
 			Subject subject = null;
 			if (configuration.isKerberos()) {
@@ -92,7 +93,9 @@ public class KafkaLagMonitor
 						ArrayList<KafkaOffsetMonitor> kafkaOffsetMonitors = new ArrayList<KafkaOffsetMonitor>();
 						kafkaOffsetMonitors.addAll(util.getSpoutKafkaOffsetMonitors());
 						kafkaOffsetMonitors.addAll(util.getRegularKafkaOffsetMonitors());
-						kafkaOffsetMonitors.addAll(util.getNewConsumer().values());
+						for (Map<String, KafkaOffsetMonitor> map : util.getNewConsumer().values()) {
+							kafkaOffsetMonitors.addAll(map.values());
+						}
 						Collections.sort(kafkaOffsetMonitors, new KafkaOffsetMonitorComparator());
 						references.set(kafkaOffsetMonitors);
 					} catch (Exception e) {
