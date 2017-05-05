@@ -46,5 +46,5 @@ if [ "master" == "$TRAVIS_BRANCH" ]; then
     
     gpg -q --batch --import /tmp/secrets/secrets/codesign.asc >> /dev/null
     
-    mvn -T2 -B -Darguments=-Dgpg.passphrase=$passphrase release:clean release:prepare release:perform --settings settings.xml
+    mvn -q -T2 -B -Darguments=-Dgpg.passphrase=$passphrase release:clean release:prepare release:perform --settings settings.xml
 fi
