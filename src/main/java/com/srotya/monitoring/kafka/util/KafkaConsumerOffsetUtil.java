@@ -96,7 +96,7 @@ public class KafkaConsumerOffsetUtil {
 			boolean enableHistory, StorageEngine server) {
 		if (kafkaConsumerOffsetUtil == null) {
 			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient, enableHistory, server);
-//			kafkaConsumerOffsetUtil.setupMonitoring();
+			kafkaConsumerOffsetUtil.setupMonitoring();
 		}
 		return kafkaConsumerOffsetUtil;
 	}
@@ -148,7 +148,7 @@ public class KafkaConsumerOffsetUtil {
 				props.put("group.id", kafkaConfiguration.getConsumerGroupName());
 				props.put("key.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 				props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
-				props.put("enable.auto.commit", "true");
+				props.put("enable.auto.commit", "false");
 				props.put("auto.offset.reset", "earliest");
 				props.put("security.protocol", System.getProperty("security.protocol"));
 				@SuppressWarnings("resource")
