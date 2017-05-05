@@ -42,7 +42,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.protocol.types.Field;
 import org.apache.kafka.common.protocol.types.Schema;
 import org.apache.kafka.common.protocol.types.Struct;
@@ -67,6 +66,11 @@ import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
 
+/**
+ * Edited by
+ * 
+ * @author ambud
+ */
 public class KafkaConsumerOffsetUtil {
 
 	public static final String OFFSET = "offset";
@@ -92,7 +96,7 @@ public class KafkaConsumerOffsetUtil {
 			boolean enableHistory, StorageEngine server) {
 		if (kafkaConsumerOffsetUtil == null) {
 			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient, enableHistory, server);
-			kafkaConsumerOffsetUtil.setupMonitoring();
+//			kafkaConsumerOffsetUtil.setupMonitoring();
 		}
 		return kafkaConsumerOffsetUtil;
 	}
@@ -117,12 +121,13 @@ public class KafkaConsumerOffsetUtil {
 		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 		executorService.scheduleAtFixedRate(new KafkaConsumerOffsetThread(), 2, kafkaConfiguration.getRefreshSeconds(),
 				TimeUnit.SECONDS);
+		log.info("Monitoring thread for zookeeper offsets online");
 	}
 
 	/**
-	 * ./kafka-console-consumer.sh --consumer.config /tmp/consumer.config \
+	 * ./kafka-console-consumer.sh --consumer.config /tmp/consumer.config
 	 * --formatter
-	 * "kafka.coordinator.GroupMetadataManager\$OffsetsMessageFormatter" \
+	 * "kafka.coordinator.GroupMetadataManager\$OffsetsMessageFormatter"
 	 * --zookeeper localhost:2181 --topic __consumer_offsets --from-beginning
 	 * 
 	 * @author ambud
@@ -138,113 +143,83 @@ public class KafkaConsumerOffsetUtil {
 		@Override
 		public void run() {
 			try {
-				Subject subject = null;
-				if (kafkaConfiguration.isKerberos()) {
-					LoginContext lc = new LoginContext("Client");
-					lc.login();
-					subject = lc.getSubject();
-				} else {
-					Subject.getSubject(AccessController.getContext());
-				}
-				Subject.doAs(subject, new PrivilegedAction<Void>() {
-
-					@Override
-					public Void run() {
-						try {
-							Properties props = new Properties();
-							props.put("bootstrap.servers",
-									brokerHosts.peek() + ":" + kafkaConfiguration.getKafkaPort());
-							props.put("group.id", kafkaConfiguration.getConsumerGroupName());
-							props.put("key.deserializer",
-									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
-							props.put("value.deserializer",
-									"org.apache.kafka.common.serialization.ByteArrayDeserializer");
-							props.put("enable.auto.commit", "true");
-							props.put("auto.commit.interval.ms", "1000");
-							props.put("security.protocol", System.getProperty("security.protocol"));
-							@SuppressWarnings("resource")
-							KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(props);
-							consumer.subscribe(Arrays.asList("__consumer_offsets"));
-							for (TopicPartition topicPartition : consumer.assignment()) {
-								consumer.seekToEnd(topicPartition);
-							}
-							log.info("Connected to Kafka consumer offset topic");
-							Schema schema = new Schema(new Field("group", Schema.STRING),
-									new Field(TOPIC, Schema.STRING), new Field("partition", Schema.INT32));
-							while (true) {
-								ConsumerRecords<byte[], byte[]> records = consumer.poll(10000);
-								for (ConsumerRecord<byte[], byte[]> consumerRecord : records) {
-									if (consumerRecord.value() != null && consumerRecord.key() != null) {
-										ByteBuffer key = ByteBuffer.wrap(consumerRecord.key());
-										short version = key.getShort();
-										if (version < 2) {
-											try {
-												Struct struct = (Struct) schema.read(key);
-												if (struct.getString("group")
-														.equalsIgnoreCase(kafkaConfiguration.getConsumerGroupName())) {
-													continue;
-												}
-												String group = struct.getString("group");
-												String topic = struct.getString(TOPIC);
-												int partition = struct.getInt("partition");
-												SimpleConsumer con = util.getConsumer(util.brokerHosts.peek(),
-														util.kafkaConfiguration.getKafkaPort(), clientName);
-												long realOffset = util.getLastOffset(con, struct.getString(TOPIC),
-														partition, -1, clientName);
-												long consumerOffset = readOffsetMessageValue(
-														ByteBuffer.wrap(consumerRecord.value()));
-												long lag = realOffset - consumerOffset;
-												KafkaOffsetMonitor mon = new KafkaOffsetMonitor(group, topic, partition,
-														realOffset, consumerOffset, lag);
-												topics.add(topic);
-												Map<String, KafkaOffsetMonitor> map = consumerOffsetMap.get(topic);
-												if (map == null) {
-													map = new ConcurrentHashMap<>();
-													consumerOffsetMap.put(topic, map);
-												}
-												map.put(group + "%" + partition, mon);
-												if (enableHistory) {
-													server.writeDataPoint(
-															new DataPoint(DB_NAME, MEASUREMENT_NAME, MEASUREMENT_NAME,
-																	Arrays.asList(group, topic,
-																			String.valueOf(partition)),
-																	System.currentTimeMillis(), lag));
-													server.writeDataPoint(
-															new DataPoint(DB_NAME, MEASUREMENT_NAME, PRODUCER,
-																	Arrays.asList(group, topic,
-																			String.valueOf(partition)),
-																	System.currentTimeMillis(), realOffset));
-													server.writeDataPoint(
-															new DataPoint(DB_NAME, MEASUREMENT_NAME, CONSUMER,
-																	Arrays.asList(group, topic,
-																			String.valueOf(partition)),
-																	System.currentTimeMillis(), consumerOffset));
-												}
-											} catch (Exception e) {
-												e.printStackTrace();
-											}
-										}
+				Properties props = new Properties();
+				props.put("bootstrap.servers", brokerHosts.peek() + ":" + kafkaConfiguration.getKafkaPort());
+				props.put("group.id", kafkaConfiguration.getConsumerGroupName());
+				props.put("key.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+				props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+				props.put("enable.auto.commit", "true");
+				props.put("auto.offset.reset", "earliest");
+				props.put("security.protocol", System.getProperty("security.protocol"));
+				@SuppressWarnings("resource")
+				KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(props);
+				consumer.subscribe(Arrays.asList("__consumer_offsets"));
+				log.info("Connected to Kafka consumer offset topic");
+				Schema schema = new Schema(new Field("group", Schema.STRING), new Field(TOPIC, Schema.STRING),
+						new Field("partition", Schema.INT32));
+				while (true) {
+					ConsumerRecords<byte[], byte[]> records = consumer.poll(10000);
+					for (ConsumerRecord<byte[], byte[]> consumerRecord : records) {
+						if (consumerRecord.value() != null && consumerRecord.key() != null) {
+							ByteBuffer key = ByteBuffer.wrap(consumerRecord.key());
+							short version = key.getShort();
+							if (version < 2) {
+								try {
+									Struct struct = (Struct) schema.read(key);
+									if (struct.getString("group")
+											.equalsIgnoreCase(kafkaConfiguration.getConsumerGroupName())) {
+										continue;
 									}
+									String group = struct.getString("group");
+									String topic = struct.getString(TOPIC);
+									int partition = struct.getInt("partition");
+									SimpleConsumer con = util.getConsumer(util.brokerHosts.peek(),
+											util.kafkaConfiguration.getKafkaPort(), clientName);
+									long realOffset = util.getLastOffset(con, struct.getString(TOPIC), partition, -1,
+											clientName);
+									long consumerOffset = readOffsetMessageValue(
+											ByteBuffer.wrap(consumerRecord.value()));
+									long lag = realOffset - consumerOffset;
+									KafkaOffsetMonitor mon = new KafkaOffsetMonitor(group, topic, partition, realOffset,
+											consumerOffset, lag);
+									topics.add(topic);
+									Map<String, KafkaOffsetMonitor> map = consumerOffsetMap.get(topic);
+									if (map == null) {
+										map = new ConcurrentHashMap<>();
+										consumerOffsetMap.put(topic, map);
+									}
+									map.put(group + "%" + partition, mon);
+									if (enableHistory) {
+										server.writeDataPoint(new DataPoint(DB_NAME, MEASUREMENT_NAME, MEASUREMENT_NAME,
+												Arrays.asList(group, topic, String.valueOf(partition)),
+												System.currentTimeMillis(), lag));
+										server.writeDataPoint(new DataPoint(DB_NAME, MEASUREMENT_NAME, PRODUCER,
+												Arrays.asList(group, topic, String.valueOf(partition)),
+												System.currentTimeMillis(), realOffset));
+										server.writeDataPoint(new DataPoint(DB_NAME, MEASUREMENT_NAME, CONSUMER,
+												Arrays.asList(group, topic, String.valueOf(partition)),
+												System.currentTimeMillis(), consumerOffset));
+									}
+								} catch (Exception e) {
+									e.printStackTrace();
 								}
 							}
-						} catch (Exception e) {
-							e.printStackTrace();
-							util.brokerHosts.add(util.brokerHosts.remove());
 						}
-						return null;
 					}
-
-					private long readOffsetMessageValue(ByteBuffer buffer) {
-						buffer.getShort(); // read and ignore version
-						long offset = buffer.getLong();
-						return offset;
-					}
-				});
+				}
 			} catch (Exception e) {
+				e.printStackTrace();
+				util.brokerHosts.add(util.brokerHosts.remove());
 			}
 
 		}
 
+	}
+
+	private long readOffsetMessageValue(ByteBuffer buffer) {
+		buffer.getShort(); // read and ignore version
+		long offset = buffer.getLong();
+		return offset;
 	}
 
 	private class KafkaConsumerOffsetThread implements Runnable {
@@ -288,6 +263,7 @@ public class KafkaConsumerOffsetUtil {
 				e.printStackTrace();
 			}
 		}
+
 	}
 
 	public List<KafkaOffsetMonitor> getTopicOffsets() throws Exception {
@@ -312,6 +288,7 @@ public class KafkaConsumerOffsetUtil {
 				}
 			}
 		} catch (ClosedChannelException e) {
+			e.printStackTrace();
 			brokerHosts.add(brokerHosts.remove());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -329,7 +306,8 @@ public class KafkaConsumerOffsetUtil {
 			try {
 				partitions = zkClient.getChildren(kafkaConfiguration.getCommonZkRoot() + "/" + consumerGroup);
 			} catch (Exception e) {
-				log.error("Error while listing partitions for the consumer group: " + consumerGroup);
+				log.warn("Error while listing partitions for the consumer group: " + consumerGroup);
+				continue;
 			}
 			try {
 				for (String partition : partitions) {
@@ -418,6 +396,7 @@ public class KafkaConsumerOffsetUtil {
 			return kafkaOffsetMonitors;
 		} catch (ClosedChannelException e) {
 			brokerHosts.add(brokerHosts.remove());
+			e.printStackTrace();
 			return new ArrayList<>();
 		} catch (Exception e) {
 			throw e;
@@ -475,8 +454,7 @@ public class KafkaConsumerOffsetUtil {
 			long[] offsets = response.offsets(topic, partition);
 			lastOffset = offsets[0];
 		} catch (Exception e) {
-			log.error(
-					"Error while collecting the log Size for topic: " + topic + ", and partition: " + partition, e);
+			log.error("Error while collecting the log Size for topic: " + topic + ", and partition: " + partition, e);
 		}
 		return lastOffset;
 	}
@@ -499,7 +477,7 @@ public class KafkaConsumerOffsetUtil {
 		}
 	}
 
-	public String htmlOutput(List<KafkaOffsetMonitor> kafkaOffsetMonitors) {
+	public static String htmlOutput(List<KafkaOffsetMonitor> kafkaOffsetMonitors) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><body><pre>");
 		sb.append(String.format("%s \t %s \t %s \t %s \t %s \t %s \n", StringUtils.rightPad("Consumer Group", 40),
@@ -545,13 +523,13 @@ public class KafkaConsumerOffsetUtil {
 			builder.append(String.format("# metrics for topic-partition:%s-%d and consumer-group:%s\n",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(),
 					kafkaOffsetMonitor.getConsumerGroupName()));
-			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "lag",
+			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "kakfa_lag",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLag()));
-			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "consumer_offset",
+			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "kafka_consumer_offset",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getConsumerOffset()));
-			builder.append(String.format("%s{topic=\"%s\",partition=\"%d\"} %d\n", "producer_offset",
+			builder.append(String.format("%s{topic=\"%s\",partition=\"%d\"} %d\n", "kafka_producer_offset",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLogSize()));
 			builder.append("\n");
 		}

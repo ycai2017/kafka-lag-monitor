@@ -25,6 +25,7 @@ import javax.security.auth.login.LoginContext;
 
 import com.srotya.monitoring.kafka.core.managed.ZKClient;
 import com.srotya.monitoring.kafka.resources.KafkaResource;
+import com.srotya.monitoring.kafka.resources.KafkaThroughtputResource;
 import com.srotya.monitoring.kafka.resources.PrometheusResource;
 import com.srotya.monitoring.kafka.util.KafkaMBeanUtil;
 import com.srotya.monitoring.kafka.util.KafkaUtils;
@@ -32,7 +33,6 @@ import com.srotya.sidewinder.core.storage.StorageEngine;
 import com.srotya.sidewinder.core.storage.mem.MemStorageEngine;
 
 import io.dropwizard.Application;
-import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -43,7 +43,7 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 
 	@Override
 	public void initialize(Bootstrap<KafkaMonitorConfiguration> bootstrap) {
-		bootstrap.addBundle(new AssetsBundle("/web", "/", "index.html"));
+		// bootstrap.addBundle(new AssetsBundle("/web", "/", "index.html"));
 	}
 
 	@Override
@@ -74,12 +74,18 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 				environment.lifecycle().manage(zkClient);
 				environment.jersey().setUrlPattern("/api/*");
 				KafkaUtils.getInstance(zkClient);
-				try {
-					KafkaMBeanUtil.getInstance(configuration, storageEngine);
-				} catch (IOException e) {
-					e.printStackTrace();
+				if (configuration.isEnableJMX()) {
+					try {
+						KafkaMBeanUtil.getInstance(configuration, storageEngine);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-				KafkaUtils.getInstance(zkClient);
+				if (configuration.isEnableHistory()) {
+					KafkaThroughtputResource throughputResource = new KafkaThroughtputResource(configuration, zkClient,
+							storageEngine);
+					environment.jersey().register(throughputResource);
+				}
 				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient, storageEngine);
 				environment.jersey().register(kafkaResource);
 				PrometheusResource prometheusResource = new PrometheusResource(configuration, zkClient, storageEngine);

@@ -49,7 +49,10 @@ public class KafkaMonitorConfiguration extends Configuration {
 	private String sidewinderConfigPath = "";
 
 	@Valid
-	private boolean enableHistory = true;
+	private boolean enableHistory = false;
+	
+	@Valid
+	private boolean enableJMX = false;
 
 	@Valid
 	private int jmxPort = 9999;
@@ -202,5 +205,19 @@ public class KafkaMonitorConfiguration extends Configuration {
 	 */
 	public void setJmxPort(int jmxPort) {
 		this.jmxPort = jmxPort;
+	}
+
+	/**
+	 * @return the enableJMX
+	 */
+	public boolean isEnableJMX() {
+		return enableJMX;
+	}
+
+	/**
+	 * @param enableJMX the enableJMX to set
+	 */
+	public void setEnableJMX(boolean enableJMX) {
+		this.enableJMX = enableJMX;
 	}
 }
