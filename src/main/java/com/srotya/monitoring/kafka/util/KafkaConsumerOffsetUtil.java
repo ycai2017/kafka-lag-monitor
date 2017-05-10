@@ -149,7 +149,7 @@ public class KafkaConsumerOffsetUtil {
 				props.put("key.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 				props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 				props.put("enable.auto.commit", "false");
-				props.put("auto.offset.reset", "earliest");
+				props.put("auto.offset.reset", "latest");
 				props.put("security.protocol", System.getProperty("security.protocol"));
 				@SuppressWarnings("resource")
 				KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(props);
@@ -523,7 +523,7 @@ public class KafkaConsumerOffsetUtil {
 			builder.append(String.format("# metrics for topic-partition:%s-%d and consumer-group:%s\n",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getPartition(),
 					kafkaOffsetMonitor.getConsumerGroupName()));
-			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "kakfa_lag",
+			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "kafka_lag",
 					kafkaOffsetMonitor.getTopic(), kafkaOffsetMonitor.getConsumerGroupName(),
 					kafkaOffsetMonitor.getPartition(), kafkaOffsetMonitor.getLag()));
 			builder.append(String.format("%s{topic=\"%s\",group=\"%s\",partition=\"%d\"} %d\n", "kafka_consumer_offset",
