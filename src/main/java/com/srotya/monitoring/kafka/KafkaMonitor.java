@@ -18,6 +18,7 @@ package com.srotya.monitoring.kafka;
 import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.sql.SQLException;
 import java.util.HashMap;
 
 import javax.security.auth.Subject;
@@ -29,6 +30,7 @@ import com.srotya.monitoring.kafka.resources.KafkaThroughtputResource;
 import com.srotya.monitoring.kafka.resources.PrometheusResource;
 import com.srotya.monitoring.kafka.util.KafkaMBeanUtil;
 import com.srotya.monitoring.kafka.util.KafkaUtils;
+import com.srotya.sidewinder.core.api.grafana.GrafanaQueryApi;
 import com.srotya.sidewinder.core.storage.StorageEngine;
 import com.srotya.sidewinder.core.storage.mem.MemStorageEngine;
 
@@ -85,6 +87,12 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 					KafkaThroughtputResource throughputResource = new KafkaThroughtputResource(configuration, zkClient,
 							storageEngine);
 					environment.jersey().register(throughputResource);
+					try {
+						environment.jersey().register(new GrafanaQueryApi(storageEngine));
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				KafkaResource kafkaResource = new KafkaResource(configuration, zkClient, storageEngine);
 				environment.jersey().register(kafkaResource);
