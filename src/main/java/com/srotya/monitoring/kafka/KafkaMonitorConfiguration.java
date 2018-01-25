@@ -92,6 +92,7 @@ public class KafkaMonitorConfiguration extends Configuration {
 	 * @return the jaasConf
 	 */
 	public String getJaasConf() {
+		System.out.println("#####JaasConf - " + jaasConf);
 		return jaasConf;
 	}
 
