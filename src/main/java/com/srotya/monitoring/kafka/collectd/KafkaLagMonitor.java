@@ -180,8 +180,8 @@ public class KafkaLagMonitor
 				System.setProperty("java.security.auth.login.config", configuration.getJaasConf());
 				System.setProperty("java.security.krb5.conf", "/etc/krb5.conf");
 				System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
-				//System.setProperty("security.protocol", "PLAINTEXTSASL"); //SASL_PLAINTEXT
-				System.setProperty("security.protocol", "SASL_PLAINTEXT");
+				System.setProperty("security.protocol", "PLAINTEXTSASL"); //SASL_PLAINTEXT
+				//System.setProperty("security.protocol", "SASL_PLAINTEXT");
 				System.setProperty("sasl.kerberos.service.name", "kafka");
 				System.out.println("### KafkaLagMonitor Using kerberos");
 				LoginContext lc = new LoginContext("Client");
