@@ -411,7 +411,13 @@ public class KafkaConsumerOffsetUtil {
 			throws ClosedChannelException {
 		List<TopicPartitionLeader> partitions = new ArrayList<TopicPartitionLeader>();
 		TopicMetadataRequest topicMetadataRequest = new TopicMetadataRequest(Collections.singletonList(topic));
-		TopicMetadataResponse topicMetadataResponse = consumer.send(topicMetadataRequest);
+		TopicMetadataResponse topicMetadataResponse = null;
+		try {
+			topicMetadataResponse = consumer.send(topicMetadataRequest);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return partitions;
+		}
 		List<TopicMetadata> topicMetadataList = topicMetadataResponse.topicsMetadata();
 		for (TopicMetadata topicMetadata : topicMetadataList) {
 			List<PartitionMetadata> partitionMetadataList = topicMetadata.partitionsMetadata();
@@ -434,7 +440,13 @@ public class KafkaConsumerOffsetUtil {
 		try {
 			List<String> topics = Collections.singletonList(topic);
 			TopicMetadataRequest req = new TopicMetadataRequest(topics);
-			kafka.javaapi.TopicMetadataResponse topicMetadataResponse = consumer.send(req);
+			kafka.javaapi.TopicMetadataResponse topicMetadataResponse = null;
+			try {
+				topicMetadataResponse = consumer.send(req);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return -1L;
+			}
 			TopicAndPartition topicAndPartition = new TopicAndPartition(topic, partition);
 			for (TopicMetadata topicMetadata : topicMetadataResponse.topicsMetadata()) {
 				for (PartitionMetadata partitionMetadata : topicMetadata.partitionsMetadata()) {
