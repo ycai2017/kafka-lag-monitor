@@ -1,6 +1,6 @@
 zookeeperUrls: ip-10-228-101-92.ingest.cdp.internal:2181/kafka
 refreshSeconds: 60
-jaas: /home/centos/kafka-lag-monitor/jaas.conf
+jaasConf: /home/centos/kafka-lag-monitor/jaas.conf
 kerberos: true 
 kafkaBroker:
  - ip-10-228-101-92.ingest.cdp.internal

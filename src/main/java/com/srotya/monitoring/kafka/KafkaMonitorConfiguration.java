@@ -18,6 +18,7 @@ package com.srotya.monitoring.kafka;
 import io.dropwizard.Configuration;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 
 public class KafkaMonitorConfiguration extends Configuration {
 
@@ -35,6 +36,25 @@ public class KafkaMonitorConfiguration extends Configuration {
 
 	@Valid
 	private String commonZkRoot = "";
+
+	@Override
+	public String toString() {
+		return "KafkaMonitorConfiguration{" +
+				"super='" + super.toString() + '\'' +
+				"jaasConf='" + jaasConf + '\'' +
+				", kerberos=" + kerberos +
+				", zookeeperUrls='" + zookeeperUrls + '\'' +
+				", refreshSeconds=" + refreshSeconds +
+				", commonZkRoot='" + commonZkRoot + '\'' +
+				", kafkaBroker=" + Arrays.toString(kafkaBroker) +
+				", kafkaPort=" + kafkaPort +
+				", consumerGroupName='" + consumerGroupName + '\'' +
+				", sidewinderConfigPath='" + sidewinderConfigPath + '\'' +
+				", enableHistory=" + enableHistory +
+				", enableJMX=" + enableJMX +
+				", jmxPort=" + jmxPort +
+				'}';
+	}
 
 	@Valid
 	private String[] kafkaBroker = new String[] { "localhost" };
@@ -92,7 +112,7 @@ public class KafkaMonitorConfiguration extends Configuration {
 	 * @return the jaasConf
 	 */
 	public String getJaasConf() {
-		System.out.println("#####JaasConf - " + jaasConf);
+		System.out.println("#####getJaasConf - " + jaasConf);
 		return jaasConf;
 	}
 

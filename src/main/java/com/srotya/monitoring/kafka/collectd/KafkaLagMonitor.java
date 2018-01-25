@@ -144,7 +144,7 @@ public class KafkaLagMonitor
 		for (OConfigItem item : subConf) {
 			System.err.println("Configuring:" + item);
 			switch (item.getKey().toLowerCase()) {
-			case "jaas":
+			case "jaasConfig":
 				jaas = item.getValues().iterator().next().getString();
 				break;
 			case "kerberos":
@@ -174,6 +174,7 @@ public class KafkaLagMonitor
 		configuration.setKafkaBroker(brokers.toArray(new String[1]));
 		configuration.setKafkaPort(kafkaPort);
 		configuration.setZookeeperUrls(zkUrl);
+		System.out.println("#### configuration: " + configuration);
 		try {
 			if (configuration.isKerberos()) {
 				System.setProperty("java.security.auth.login.config", configuration.getJaasConf());
