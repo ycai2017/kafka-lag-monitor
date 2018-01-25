@@ -60,7 +60,7 @@ public class KafkaMonitor extends Application<KafkaMonitorConfiguration> {
 			System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
 			System.setProperty("security.protocol", "PLAINTEXTSASL"); //SASL_PLAINTEXT
 			System.setProperty("sasl.kerberos.service.name", "kafka");
-			System.out.println("Using kerberos");
+			System.out.println("KafkaMonitor Using kerberos");
 			LoginContext lc = new LoginContext("Client");
 			lc.login();
 			subject = lc.getSubject();

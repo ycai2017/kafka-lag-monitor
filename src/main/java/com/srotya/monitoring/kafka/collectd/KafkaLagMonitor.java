@@ -174,7 +174,7 @@ public class KafkaLagMonitor
 		configuration.setKafkaBroker(brokers.toArray(new String[1]));
 		configuration.setKafkaPort(kafkaPort);
 		configuration.setZookeeperUrls(zkUrl);
-		System.out.println("#### configuration: " + configuration);
+
 		try {
 			if (configuration.isKerberos()) {
 				System.setProperty("java.security.auth.login.config", configuration.getJaasConf());
@@ -182,10 +182,11 @@ public class KafkaLagMonitor
 				System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
 				System.setProperty("security.protocol", "PLAINTEXTSASL");
 				System.setProperty("sasl.kerberos.service.name", "kafka");
-				System.out.println("Using kerberos");
+				System.out.println("### KafkaLagMonitor Using kerberos");
 				LoginContext lc = new LoginContext("Client");
 				lc.login();
 				subject = lc.getSubject();
+				System.out.println("#### Succeed Kerberose logged in, subject = " + subject);
 			} else {
 				System.setProperty("security.protocol", "PLAINTEXT");
 				subject = Subject.getSubject(AccessController.getContext());
@@ -201,6 +202,8 @@ public class KafkaLagMonitor
 				zkClient = new ZKClient(configuration);
 				try {
 					zkClient.start();
+
+					System.out.print("## zkClient topics - " + zkClient.getTopics());
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
