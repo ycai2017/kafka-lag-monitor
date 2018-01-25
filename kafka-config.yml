@@ -4,8 +4,8 @@ jaasConf: /home/centos/kafka-lag-monitor/jaas.conf
 kerberos: true 
 kafkaBroker:
  - ip-10-228-101-92.ingest.cdp.internal
- - ip-10-228-101-171.ingest.cdp.internal
- - ip-10-228-101-158.ingest.cdp.internal 
+# - ip-10-228-101-171.ingest.cdp.internal
+# - ip-10-228-101-158.ingest.cdp.internal
 kafkaPort: 6667
 commonZkRoot: /
 
