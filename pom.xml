@@ -127,6 +127,8 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+          <fork>true</fork>
+          <executable>/usr/java/jdk1.8.0_161/bin/javac</executable>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
