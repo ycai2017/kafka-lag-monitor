@@ -233,6 +233,7 @@ public class KafkaConsumerOffsetUtil {
 					LoginContext lc = new LoginContext("Client");
 					lc.login();
 					subject = lc.getSubject();
+					System.out.println("## KafakaConsumerOffsetTread login, subject - " + subject);
 				} else {
 					Subject.getSubject(AccessController.getContext());
 				}
@@ -273,6 +274,7 @@ public class KafkaConsumerOffsetUtil {
 		try {
 			SimpleConsumer consumer = getConsumer(brokerHosts.peek(), kafkaConfiguration.getKafkaPort(), clientName);
 			for (String topic : zkClient.getTopics()) {
+				System.out.println("## getTopicOffsets, topic - " + topic);
 				topics.add(topic);
 				List<TopicPartitionLeader> partitions = getPartitions(consumer, topic);
 				log.warn("Topic offset fetching:" + topic + "\tpartitions:" + partitions);
