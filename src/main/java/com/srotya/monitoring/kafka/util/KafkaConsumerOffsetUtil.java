@@ -98,6 +98,8 @@ public class KafkaConsumerOffsetUtil {
 			kafkaConsumerOffsetUtil = new KafkaConsumerOffsetUtil(kafkaConfiguration, zkClient, enableHistory, server);
 			kafkaConsumerOffsetUtil.setupMonitoring();
 		}
+		System.out.println("############# Kafka Monitor Configuration ############# ");
+		System.out.println(kafkaConfiguration);
 		return kafkaConsumerOffsetUtil;
 	}
 
