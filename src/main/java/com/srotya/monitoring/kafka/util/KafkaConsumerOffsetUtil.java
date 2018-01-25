@@ -469,6 +469,9 @@ public class KafkaConsumerOffsetUtil {
 			consumer = new SimpleConsumer(host, port, 100000, 64 * 1024, clientName,
 					System.getProperty("security.protocol"));
 			log.info("Created a new Kafka Consumer for host: " + host);
+			System.out.println("Created a new Kafka Consumer for host:port - " + host + ":" + port
+					+ ", with secProtocal - " + System.getProperty("security.protocol"
+					+ ", with clientName - " + clientName));
 			consumerMap.put(host, consumer);
 		}
 		return consumer;
