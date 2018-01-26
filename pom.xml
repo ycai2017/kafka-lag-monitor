@@ -15,7 +15,10 @@
     <curator-framework.version>2.7.0</curator-framework.version>
     <dropwizard.version>1.0.2</dropwizard.version>
     <jersey.version>1.18.1</jersey.version>
-    <kafka.version>0.9.0.2.3.4.94-1</kafka.version>
+    <!--<kafka.version>0.9.0.2.3.4.94-1</kafka.version>-->
+    <!--<kafka.main>kafka_2.10</kafka.main>-->
+    <kafka.main>kafka_2.10</kafka.main>
+    <kafka.version>0.10.2.1</kafka.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
@@ -61,6 +64,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>${commons.lang3.version}</version>
@@ -82,7 +90,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.10</artifactId>
+      <artifactId>${kafka.main}</artifactId>
       <version>${kafka.version}</version>
       <exclusions>
         <exclusion>
@@ -127,8 +135,8 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-          <fork>true</fork>
-          <executable>/usr/java/jdk1.8.0_161/bin/javac</executable>
+          <!--<fork>true</fork>
+          <executable>/usr/java/jdk1.8.0_161/bin/javac</executable>-->
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
